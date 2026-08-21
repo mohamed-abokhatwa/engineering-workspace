@@ -1,0 +1,5 @@
+# Engineering Workspace — engspace.app
+User-agent: *
+Allow: /
+
+Sitemap: https://engspace.app/sitemap.xml
