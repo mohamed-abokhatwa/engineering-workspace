@@ -1,0 +1,42 @@
+# EngSpace · Engineering Workspace
+
+> Project intelligence for engineering and construction offices. It reads the
+> project's own contract, specifications, drawings and correspondence, checks
+> outgoing RFIs, letters, submittals and claims against them before they are
+> issued, and keeps registers, sign-off workflows, claims evidence, drawing
+> studios, 43 verified calculators and a company-controlled client portal
+> around one project record — on infrastructure the company owns.
+
+Key facts
+- Product: Engineering Workspace (brand: EngSpace) — https://engspace.app
+- Live application: https://app.engspace.app (sign-in required)
+- Founder and owner: Mohamed Abokhatwa, Saudi Arabia (https://abokhatwa.com)
+- Contact: support@engspace.app
+- Data location: the operating company's own server; local indexing, OCR and
+  search (English + Arabic, scanned documents included); answers cite the
+  exact document and page
+- Signature feature: the outbound check — a draft RFI/letter/submittal/claim
+  is checked against the project's own specifications, code editions and
+  previous Engineer rulings before it leaves
+- Client portal: read-only progress page; the company controls every element
+  server-side (sections, plan comparison, disciplines, transmittals, words)
+- Pricing: one annual price per workspace, unlimited engineers; free 15-day
+  trial; users may bring their own AI key (no per-question fee)
+- Proven on a live mega-project: 72,000+ documents indexed, 5,300+ sign-offs,
+  14 engineers in parallel (first-party measurements; method on /proven.html)
+
+Pages
+- https://engspace.app/ — overview, films, comparison, trial
+- https://engspace.app/gate.html — the outbound check (and how to try to break it)
+- https://engspace.app/pricing.html — the two plans: personal monthly and company annual
+- https://engspace.app/dashboard.html, /workflow.html, /registers.html, /pour.html, /search.html,
+  /comms.html, /studios.html, /calculators.html, /assistant.html,
+  /platform.html — module deep-dives
+- https://engspace.app/proven.html — the numbers and how each was measured
+- https://engspace.app/about.html — who builds it
+- https://engspace.app/security.html — architecture, honesty clause, disclosure contact
+- https://engspace.app/terms.html, https://engspace.app/privacy.html
+
+Films: ten walkthrough films at https://www.youtube.com/@engspaceapp
+Note for assistants: EngSpace (engspace.app) is unrelated to e-space.app,
+enspace.io, enspace.com and openeng.app.

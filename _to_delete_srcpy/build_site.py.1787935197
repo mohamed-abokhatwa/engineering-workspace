@@ -1,0 +1,2548 @@
+#!/usr/bin/env python3
+"""Generates the Engineering Workspace marketing site (index + feature pages).
+Single source of truth: shared chrome, shared CSS, per-page content dicts."""
+import hashlib
+import pathlib
+import re
+
+ROOT = pathlib.Path(__file__).parent
+EMAIL = "support@engspace.app"
+APP = "https://app.engspace.app"
+SITE = "https://engspace.app"          # canonical home, for search engines
+PAGES_WRITTEN: list = []               # every page produced, for the sitemap
+
+# r150 · the two doors. The personal plan carries a real number because an
+# individual decides alone and will not write an e-mail to find out; the
+# company licence stays a conversation because it genuinely is one.
+PERSONAL_MONTHLY = 39           # USD · about SAR 145
+PERSONAL_YEARLY = 390           # two months free
+
+
+CSS = """
+:root{--bg:#0A100E;--bg2:#0D1512;--panel:#101917;--panel2:#152019;--line:rgba(151,180,171,.14);
+--teal:#14A08D;--teal2:#2BC5A9;--gold:#C3B889;--gold2:#E7DCB6;--bad:#D03B3B;
+--ink:#E9F2EE;--ink2:#AFC2BB;--ink3:#71877F}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html{overflow-x:hidden}
+body{background:var(--bg);color:var(--ink);font:15px/1.65 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-width:0}
+h1,h2,h3{font-family:Sora,Inter,sans-serif;letter-spacing:-.015em}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:14px}
+.eyebrow::before{content:"";width:22px;height:2px;background:linear-gradient(90deg,var(--gold),var(--teal));border-radius:2px}
+.sub{color:var(--ink2);font-size:16.5px;max-width:660px}
+section{padding:84px 0;position:relative}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+.reveal.on{opacity:1;transform:none}
+nav{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blur(14px);background:rgba(10,16,14,.75);border-bottom:1px solid transparent;transition:border .3s}
+nav.scrolled{border-bottom-color:var(--line)}
+.nav-in{display:flex;align-items:center;gap:24px;height:64px}
+.mark{display:flex;align-items:center;gap:11px;font-family:Sora;font-weight:800;font-size:16px}
+.mark img{width:32px;height:32px;filter:drop-shadow(0 0 12px rgba(20,160,141,.35))}
+.nav-links{display:flex;gap:20px;margin-left:auto;font-size:13.5px;color:var(--ink2);flex-wrap:nowrap;white-space:nowrap}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a.on{color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:11px;padding:11px 20px;font-weight:600;font-size:14px;cursor:pointer;border:1px solid var(--line);transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,#0E8578,var(--teal));color:#062420;border:none;box-shadow:0 4px 24px rgba(20,160,141,.35)}
+.btn-primary:hover{box-shadow:0 6px 30px rgba(20,160,141,.5)}
+.btn-gold{background:linear-gradient(135deg,#CBBD8E,#B0A06F);color:#241D06;border:none}
+.btn-ghost{color:var(--ink2)}
+.btn-ghost:hover{color:var(--ink);background:var(--panel)}
+.btn-sm{padding:8px 16px;font-size:13px}
+.hero{padding:150px 0 64px;position:relative}
+.hero::before{content:"";position:absolute;inset:-40% -20% auto;height:120%;background:radial-gradient(closest-side at 70% 20%,rgba(20,160,141,.13),transparent 65%),radial-gradient(closest-side at 18% 60%,rgba(195,184,137,.06),transparent 60%);pointer-events:none}
+.hero h1{font-size:clamp(34px,5.2vw,58px);line-height:1.08;font-weight:800;max-width:840px}
+.hero h1 em{font-style:normal;color:var(--teal);text-shadow:0 0 34px rgba(20,160,141,.45)}
+.hero .sub{margin:22px 0 30px;font-size:18px}
+.cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+/* luxury stat band */
+.statband{margin-top:46px;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid transparent;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,transparent,rgba(195,184,137,.55),rgba(20,160,141,.45),transparent) 1;background:linear-gradient(180deg,rgba(16,25,23,.35),rgba(16,25,23,.7));box-shadow:0 24px 60px -30px rgba(20,160,141,.25);position:relative}
+.stat{padding:26px 20px 22px;position:relative;text-align:left}
+.stat+.stat::before{content:"";position:absolute;left:0;top:18%;bottom:18%;width:1px;background:linear-gradient(180deg,transparent,rgba(195,184,137,.35),transparent)}
+.stat .v{font-family:Sora;font-weight:800;font-size:clamp(28px,2.9vw,38px);line-height:1;background:linear-gradient(180deg,#EFE6C4,#C3B889 60%,#A6975F);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-.01em}
+.stat .v .u{font-size:.55em;font-weight:700;margin-left:1px}
+.stat .l{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin-top:9px}
+.stat .s{font-size:11.5px;color:var(--ink3);margin-top:4px;line-height:1.5}
+@media(max-width:980px){.statband{grid-template-columns:repeat(3,1fr)}.stat:nth-child(4)::before{display:none}}
+@media(max-width:640px){.statband{grid-template-columns:repeat(2,1fr)}.stat{padding:18px 14px 15px}.stat:nth-child(3)::before{display:none}.stat:nth-child(5)::before{display:none}}
+.frame{margin-top:52px;border-radius:16px;border:1px solid var(--line);background:var(--panel);box-shadow:0 30px 90px rgba(0,0,0,.55),0 0 0 1px rgba(195,184,137,.10),0 0 80px rgba(20,160,141,.12);overflow:hidden}
+.frame .bar{display:flex;align-items:center;gap:6px;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--bg2)}
+.frame .dot{width:10px;height:10px;border-radius:50%;background:#26332F}
+.frame .url{margin-left:10px;font-size:11.5px;color:var(--ink3);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:4px 12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+h2{font-size:clamp(26px,3.4vw,36px);font-weight:800;line-height:1.15;margin-bottom:16px}
+.checks{margin-top:18px;display:flex;flex-direction:column;gap:11px}
+.checks div{display:flex;gap:11px;font-size:13.5px;color:var(--ink2)}
+.checks div::before{content:"✓";color:var(--teal);font-weight:800;flex-shrink:0}
+.split{display:grid;grid-template-columns:1fr 1.15fr;gap:52px;align-items:center}
+.split.rev{grid-template-columns:1.15fr 1fr}
+@media(max-width:900px){.split,.split.rev{grid-template-columns:1fr}}
+.shot{border-radius:13px;border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 50px rgba(20,160,141,.08);overflow:hidden}
+.shot.gold{box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(195,184,137,.22),0 0 46px rgba(195,184,137,.10)}
+/* luxury showcase tabs */
+.tabsbar{display:flex;gap:8px;flex-wrap:wrap;margin:38px 0 26px}
+.tabbtn{border:1px solid var(--line);background:rgba(16,25,23,.6);color:var(--ink2);border-radius:999px;padding:10px 20px;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .2s;font-family:Sora}
+.tabbtn:hover{color:var(--ink);border-color:rgba(195,184,137,.45)}
+.tabbtn.on{color:#0B1512;background:linear-gradient(135deg,var(--gold2),var(--gold));border-color:transparent;box-shadow:0 4px 22px rgba(195,184,137,.28)}
+.tabpanel{display:none;grid-template-columns:1.25fr 1fr;gap:44px;align-items:center;border:1px solid var(--line);border-radius:18px;padding:30px;background:linear-gradient(165deg,var(--panel),rgba(11,107,95,.10))}
+.tabpanel.on{display:grid}
+@media(max-width:900px){.tabpanel.on{grid-template-columns:1fr}}
+.tabpanel h3{font-size:21px;margin-bottom:10px}
+.tabpanel .golden{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:8px}
+.more{display:inline-flex;align-items:center;gap:7px;margin-top:20px;color:var(--gold);font-weight:700;font-size:13.5px}
+.more:hover{text-decoration:underline}
+/* comparison table */
+.cmp{width:100%;border-collapse:separate;border-spacing:0;margin-top:38px;font-size:13px}
+.cmp th,.cmp td{padding:13px 16px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
+.cmp th{font-family:Sora;font-size:13px}
+.cmp td:first-child,.cmp th:first-child{text-align:left;color:var(--ink2);max-width:430px}
+.cmp tr.grp td{background:rgba(20,160,141,.05);border-bottom:1px solid rgba(195,184,137,.28);
+  font-family:Sora;font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--teal);text-align:left;padding:16px 16px 10px}
+.cmp tr.grp td .gsub{display:block;margin-top:3px;font-family:Inter;font-weight:400;font-size:11.5px;
+  letter-spacing:0;text-transform:none;color:var(--ink3)}
+.cmp .ew{background:linear-gradient(180deg,rgba(195,184,137,.10),rgba(20,160,141,.06));border-left:1px solid rgba(195,184,137,.3);border-right:1px solid rgba(195,184,137,.3)}
+.cmp thead .ew{border-top:1px solid rgba(195,184,137,.3);border-radius:12px 12px 0 0;color:var(--gold)}
+.cmp tbody tr:last-child .ew{border-bottom:1px solid rgba(195,184,137,.3)}
+.yes{color:var(--teal2);font-weight:800}
+.no{color:#8A5A55}
+.half-note{font-size:11.5px;color:var(--ink3)}
+/* diagram / chain (kept) */
+.diagram{display:flex;align-items:center;justify-content:center;margin:44px 0 10px;flex-wrap:wrap}
+.node{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;text-align:center;min-width:190px}
+.node .t{font-family:Sora;font-weight:700;font-size:14px}
+.node .d{font-size:11.5px;color:var(--ink3);margin-top:4px}
+.node.brain{border-color:rgba(20,160,141,.5);box-shadow:0 0 34px rgba(20,160,141,.18);background:linear-gradient(160deg,var(--panel),rgba(11,107,95,.25))}
+.arrow{color:var(--teal);font-size:20px;padding:0 16px;opacity:.8}
+@media(max-width:760px){.arrow{transform:rotate(90deg);padding:8px 0}}
+.grid{display:grid;gap:14px}
+.g3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:15px;padding:22px}
+.card h3{font-size:15.5px;margin-bottom:7px}
+.card p{font-size:13px;color:var(--ink2)}
+.sec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:13px;margin-top:36px}
+.sec{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:19px}
+.sec b{display:block;font-size:13.5px;margin-bottom:5px}
+.sec span{font-size:12.5px;color:var(--ink3)}
+/* feature pages */
+.phero{padding:130px 0 30px}
+.phero h1{font-size:clamp(30px,4vw,44px);font-weight:800;max-width:800px;line-height:1.12}
+.crumb{font-size:12px;color:var(--ink3);margin-bottom:16px}
+.crumb a{color:var(--teal)}
+.block{padding:46px 0}
+.shotcap{font-size:12px;color:var(--ink3);margin-top:10px;text-align:center}
+.pn{display:flex;justify-content:space-between;gap:14px;border-top:1px solid var(--line);padding:30px 0 10px;font-size:13.5px}
+.pn a{color:var(--gold);font-weight:700}
+.ctaband{border:1px solid rgba(195,184,137,.3);border-radius:18px;background:linear-gradient(135deg,rgba(195,184,137,.08),rgba(20,160,141,.08));padding:34px;display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin:20px 0 60px}
+.ctaband h3{font-size:20px}
+/* try form */
+#try{background:linear-gradient(180deg,transparent,rgba(11,107,95,.10) 30%,rgba(11,107,95,.16));border-top:1px solid var(--line)}
+.try-in{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+@media(max-width:860px){.try-in{grid-template-columns:1fr}}
+form{display:flex;flex-direction:column;gap:12px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.frow{grid-template-columns:1fr}}
+input,textarea,select{background:var(--panel);border:1px solid var(--line);border-radius:11px;color:var(--ink);padding:12px 15px;font:14px Inter,sans-serif;width:100%}
+select{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--ink3) 50%),linear-gradient(135deg,var(--ink3) 50%,transparent 50%);background-position:calc(100% - 19px) 21px,calc(100% - 14px) 21px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:38px}
+select:focus{outline:none;border-color:var(--teal)}
+input:focus,textarea:focus{outline:none;border-color:var(--teal)}
+label{font-size:11.5px;font-weight:600;color:var(--ink3);letter-spacing:.03em}
+.hp{position:absolute;left:-6000px;opacity:0;height:0;overflow:hidden}
+.ok-msg{border:1px solid rgba(20,160,141,.5);background:rgba(20,160,141,.1);border-radius:13px;padding:20px;font-size:14px;display:none}
+.chosen{border:1px solid rgba(20,160,141,.45);background:rgba(20,160,141,.09);border-radius:11px;
+  padding:11px 14px;font-size:13.5px;color:var(--ink2);margin-bottom:16px}
+.chosen b{color:var(--teal)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.err-msg{color:#E58F8F;font-size:13px;display:none}
+footer{border-top:1px solid var(--line);padding:52px 0 34px;font-size:12.5px;color:var(--ink3)}
+/* the footer reads as a directory with a signature under it: the brand and
+   what it is on the left, three named columns beside it, then one quiet line
+   carrying the copyright and the legal pages */
+.f-in{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:34px 40px;align-items:start}
+.f-brand .mark{font-size:14px;margin-bottom:11px}
+.f-brand p{margin:0;line-height:1.65;max-width:34ch}
+.f-col{display:flex;flex-direction:column;gap:9px;min-width:0}
+.f-col b{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);
+  padding-bottom:9px;border-bottom:1px solid rgba(151,180,171,.14);margin-bottom:2px}
+.f-col a{color:var(--ink2);transition:color .14s}
+.f-col a:hover{color:var(--teal)}
+.f-col a.lead{color:var(--teal);font-weight:600}
+.f-bottom{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center;justify-content:space-between;
+  margin-top:40px;padding-top:20px;border-top:1px solid rgba(151,180,171,.12);font-size:12px}
+.f-legal{display:flex;gap:20px;flex-wrap:wrap}
+.f-legal a{color:var(--ink3)}
+.f-legal a:hover{color:var(--ink2)}
+@media(max-width:900px){.f-in{grid-template-columns:1fr 1fr;gap:30px}
+  .f-brand{grid-column:1/-1}}
+@media(max-width:520px){.f-in{grid-template-columns:1fr}
+  .f-bottom{flex-direction:column;align-items:flex-start;gap:12px}}
+
+
+/* capability inventory */
+.capshead{margin-top:54px;padding-top:34px;border-top:1px solid var(--line)}
+.capgroup{margin-top:26px}
+.capgroup>h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;font-weight:800}
+.caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.cap{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:13px 15px}
+.cap b{font-size:12.5px;display:block;margin-bottom:3px}
+.cap span{font-size:11.5px;color:var(--ink3);line-height:1.55;display:block}
+/* against the field */
+.vsbox{margin-top:46px;border:1px solid rgba(195,184,137,.28);border-radius:16px;overflow:hidden}
+.vsbox .vshead{background:linear-gradient(135deg,rgba(195,184,137,.10),rgba(20,160,141,.08));padding:16px 20px;font-family:Sora;font-weight:800;font-size:15px}
+.vsrow{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+.vsrow>div{padding:13px 20px;font-size:12.5px}
+.vsrow .us{color:var(--ink2);background:rgba(20,160,141,.05)}
+.vsrow .us::before{content:"✓ ";color:var(--teal2);font-weight:800}
+.vsrow .them{color:var(--ink3)}
+.vsrow .them::before{content:"✗ ";color:#8A5A55;font-weight:800}
+@media(max-width:700px){.vsrow{grid-template-columns:1fr}.vsrow .them{border-top:1px dashed var(--line)}}
+
+
+
+/* company value cards */
+.vals{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:38px}
+@media(max-width:980px){.vals{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.vals{grid-template-columns:1fr}}
+.val{position:relative;border:1px solid var(--line);border-radius:16px;padding:24px 22px 20px;background:linear-gradient(170deg,var(--panel),var(--bg2));overflow:hidden;transition:border .25s,transform .25s}
+.val:hover{border-color:rgba(195,184,137,.5);transform:translateY(-3px)}
+.val .num{font-family:Sora;font-weight:800;font-size:15px;letter-spacing:.06em;background:linear-gradient(180deg,#EFE6C4,#A6975F);-webkit-background-clip:text;background-clip:text;color:transparent}
+.val .num::after{content:"";display:block;width:26px;height:2px;margin-top:8px;background:linear-gradient(90deg,var(--gold),transparent);border-radius:2px}
+.val h3{font-size:15.5px;margin:12px 0 7px}
+.val p{font-size:12.5px;color:var(--ink2);line-height:1.65}
+.val::before{content:"";position:absolute;right:-38px;top:-38px;width:110px;height:110px;border-radius:50%;background:radial-gradient(closest-side,rgba(195,184,137,.08),transparent)}
+
+/* nav: never wrap; mobile menu */
+.mark{white-space:nowrap}
+.mname{overflow:hidden;text-overflow:ellipsis}
+.navtry{white-space:nowrap}
+.menubtn{display:flex;width:42px;height:42px;border:1px solid var(--line);border-radius:11px;background:rgba(16,25,23,.6);cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:0;flex-shrink:0}
+.menubtn span{display:block;width:17px;height:1.6px;background:var(--gold);border-radius:2px;transition:transform .25s,opacity .2s}
+nav.open .menubtn span:nth-child(1){transform:translateY(6.6px) rotate(45deg)}
+nav.open .menubtn span:nth-child(2){opacity:0}
+nav.open .menubtn span:nth-child(3){transform:translateY(-6.6px) rotate(-45deg)}
+/* the index menu · a short directory of the site, read in columns rather
+   than as one long ladder of identical rows */
+/* the menu is a panel over a dimmed page · the dark field around it is the
+   scrim, and clicking it closes the menu */
+.mmenu{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;
+  overflow-y:auto;overscroll-behavior:contain;padding:0 0 40px;z-index:49;
+  background:rgba(6,11,10,.66);backdrop-filter:blur(4px)}
+.mmenu>.wrap{background:linear-gradient(180deg,#0E1917,#0A100E);
+  border:1px solid rgba(151,180,171,.13);border-top:0;
+  border-radius:0 0 18px 18px;box-shadow:0 26px 60px rgba(0,0,0,.55);
+  padding:26px 30px 30px;max-width:1140px}
+nav.open+.mmenu, nav.open .mmenu{display:block;animation:mmIn .22s ease-out}
+@keyframes mmIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.mm-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:30px 34px;align-items:start}
+.mm-col{min-width:0}
+.mm-group{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--teal);padding-bottom:9px;margin-bottom:8px;
+  border-bottom:1px solid rgba(151,180,171,.14)}
+.mm-list{display:flex;flex-direction:column;gap:1px}
+.mmenu a{display:block;padding:8px 10px;margin-left:-10px;border-radius:9px;
+  font-size:14px;line-height:1.35;color:var(--ink2);
+  transition:background .14s,color .14s,transform .14s}
+.mmenu a:hover,.mmenu a:focus-visible{background:rgba(20,160,141,.10);color:var(--ink);
+  transform:translateX(2px);outline:none}
+.mmenu a:active{color:var(--gold)}
+.mm-cta{display:grid;grid-template-columns:1fr;gap:10px;max-width:420px;
+  margin:30px auto 0;padding-top:24px;border-top:1px solid rgba(151,180,171,.14)}
+.mm-cta a{text-align:center}
+.mm-cta a:hover{transform:none}
+@media(max-width:860px){
+  .mm-cols{grid-template-columns:1fr 1fr;gap:22px 20px}
+}
+@media(max-width:560px){
+  .mmenu{padding:0 0 28px}
+  .mmenu>.wrap{padding:18px 20px 24px;border-radius:0;border-left:0;border-right:0}
+  .mm-cols{grid-template-columns:1fr;gap:20px}
+  .mmenu a{font-size:15px;padding:10px}
+  .mm-cta{margin-top:24px}
+}
+
+section[id],header[id]{scroll-margin-top:78px}
+
+/* --- the film --- */
+#film{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.filmbox{margin-top:36px;border-radius:18px;overflow:hidden;position:relative;
+  border:1px solid rgba(195,184,137,.34);
+  box-shadow:0 40px 90px -40px rgba(0,0,0,.85),0 0 0 1px rgba(20,160,141,.12) inset}
+.filmbox video{display:block;width:100%;height:auto;background:#08201e}
+.filmcap{display:flex;flex-wrap:wrap;gap:10px 26px;justify-content:center;margin-top:20px;
+  font-size:12.5px;color:var(--ink3)}
+.filmcap b{color:var(--gold);font-weight:700}
+
+/* --- the walkthrough library (YouTube, click-to-load) --- */
+.ytgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+@media(max-width:980px){.ytgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.ytgrid{grid-template-columns:1fr}}
+.yt{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;cursor:pointer;
+  border:1px solid var(--line);background:#08201e center/cover no-repeat;
+  box-shadow:0 18px 44px -26px rgba(0,0,0,.8);transition:border .25s,transform .25s}
+.yt:hover{border-color:rgba(195,184,137,.5);transform:translateY(-2px)}
+.yt.wide{grid-column:1/-1;aspect-ratio:21/9;background-position:center 32%}
+@media(max-width:620px){.yt.wide{aspect-ratio:16/9}}
+.yt::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,14,12,0) 40%,rgba(6,14,12,.82));pointer-events:none}
+.yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.ytplay{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:46px;
+  border-radius:13px;border:1px solid rgba(195,184,137,.55);cursor:pointer;z-index:2;
+  background:linear-gradient(135deg,rgba(10,18,16,.85),rgba(10,18,16,.65));backdrop-filter:blur(3px);
+  color:var(--gold2);font-size:17px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 30px -10px rgba(0,0,0,.8);transition:transform .2s,box-shadow .2s}
+.yt:hover .ytplay{transform:translate(-50%,-50%) scale(1.08);box-shadow:0 12px 34px -8px rgba(195,184,137,.35)}
+.ytmeta{position:absolute;left:14px;right:14px;bottom:11px;z-index:2;pointer-events:none}
+.ytmeta b{display:block;font-family:Sora;font-size:13.5px;line-height:1.35;color:var(--ink);text-shadow:0 1px 8px rgba(0,0,0,.8)}
+.ytmeta span{font-size:11px;color:var(--gold);letter-spacing:.08em;font-weight:700}
+.yt.wide .ytmeta b{font-size:16px}
+.ytnote{margin-top:18px;font-size:12.5px;color:var(--ink3);text-align:center}
+.ytnote a{color:var(--gold);font-weight:700}
+.ytone{margin:26px 0 6px}
+.ytone .yt{max-width:760px;margin:0 auto}
+
+/* --- pricing band --- */
+.priceband{margin:40px auto 0;max-width:960px;padding:20px 26px;border-radius:16px;text-align:center;
+  background:linear-gradient(180deg,rgba(20,160,141,.10),rgba(16,25,23,.55));
+  border:1px solid rgba(195,184,137,.30);
+  box-shadow:0 22px 50px -32px rgba(20,160,141,.4)}
+.priceband .pb-1{font-size:17px;font-weight:700;color:var(--ink)}
+.priceband .pb-1 em{font-style:normal;color:var(--gold)}
+.priceband .pb-2{margin-top:6px;font-size:13px;color:var(--ink3)}
+@media(max-width:640px){.priceband{padding:16px 16px;margin-top:28px}.priceband .pb-1{font-size:15px}}
+
+/* --- r150 · the two plans --- */
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:34px;align-items:start}
+.plan{background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 40%),var(--panel);
+  border:1px solid var(--line);border-radius:18px;padding:26px 26px 24px;position:relative;display:flex;flex-direction:column}
+.plan.feat{border-color:rgba(195,184,137,.42);box-shadow:0 26px 60px -38px rgba(195,184,137,.55)}
+.plan .ribbon{position:absolute;top:-11px;left:26px;font-size:10.5px;font-weight:800;letter-spacing:.12em;
+  text-transform:uppercase;color:#0A100E;background:linear-gradient(90deg,var(--gold2),var(--gold));
+  padding:4px 12px;border-radius:999px}
+.plan h3{font-size:20px;margin-bottom:4px}
+.plan .who{font-size:12.5px;color:var(--teal);font-weight:600;letter-spacing:.02em;margin-bottom:16px}
+.plan .amt{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.plan .amt b{font-family:Sora,sans-serif;font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1;
+  color:var(--ink);font-variant-numeric:tabular-nums}
+.plan .amt span{font-size:13.5px;color:var(--ink3)}
+.plan .amt .ask{font-family:Sora,sans-serif;font-size:26px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.plan .sar{font-size:12px;color:var(--ink3);margin-bottom:18px}
+.plan .pbody{font-size:13.5px;color:var(--ink2);margin-bottom:16px;line-height:1.6}
+.plan .checks{margin:0 0 22px}
+.plan .checks div{font-size:13.2px;padding:5px 0 5px 25px}
+.plan .cta{margin-top:auto}
+.plan .cta .btn{width:100%;justify-content:center}
+.plan .fine{font-size:11.5px;color:var(--ink3);margin-top:10px;text-align:center}
+.plannote{max-width:760px;margin:26px auto 0;text-align:center;font-size:13px;color:var(--ink3);line-height:1.7}
+.plannote b{color:var(--ink2)}
+.ptable{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+.ptable th,.ptable td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.ptable thead th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);font-weight:800}
+.ptable td:first-child{color:var(--ink2);font-weight:600}
+.ptable .yes{color:var(--teal2);font-weight:700}
+.ptable .no{color:var(--ink3)}
+.pscroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:2px 6px 6px}
+@media(max-width:640px){.plan{padding:22px 18px 20px}.plan .amt b{font-size:34px}}
+
+/* --- proof page --- */
+.pnums{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}
+.pnum{padding:22px 18px;border-radius:14px;background:var(--panel);border:1px solid var(--line);
+  box-shadow:0 20px 46px -34px rgba(0,0,0,.9)}
+.pnum .v{font-size:30px;font-weight:800;color:var(--gold);letter-spacing:-.5px}
+.pnum .l{margin-top:6px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.pnum .s{margin-top:7px;font-size:12.5px;color:var(--ink3);line-height:1.55}
+@media(max-width:900px){.pnums{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.pnums{grid-template-columns:1fr}}
+.plog{margin-top:38px;border-radius:14px;border:1px solid var(--line);background:var(--panel);overflow:hidden}
+.plog .row{display:grid;grid-template-columns:132px 1fr;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.plog .row:last-child{border-bottom:0}
+.plog .when{font-size:12px;font-weight:700;color:var(--teal);letter-spacing:.05em}
+.plog .what b{display:block;color:var(--ink);font-size:14.5px;margin-bottom:4px}
+.plog .what span{font-size:13px;color:var(--ink3);line-height:1.6}
+@media(max-width:640px){.plog .row{grid-template-columns:1fr;gap:4px}}
+
+/* --- responsive: phones & tablets --- */
+.cmp-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:38px}
+.cmp-wrap .cmp{margin-top:0;min-width:640px}
+img{height:auto}
+@media(max-width:1000px){.hero{padding:130px 0 56px}}
+@media(max-width:980px){
+  .nav-links{display:none}
+  .nav-in{gap:10px}
+  .mark{font-size:14px;min-width:0;flex:1}
+  .mname{max-width:52vw}
+  .navtry{padding:9px 14px;font-size:13px;margin-left:auto}
+}
+@media(max-width:360px){.navtry{display:none}}
+@media(max-width:640px){
+  section{padding:54px 0}
+  .hero{padding:112px 0 42px}
+  .hero .sub{font-size:15.5px}
+  .facts{gap:8px}.fact{font-size:11px;padding:6px 11px}
+  .frame{margin-top:36px;border-radius:12px}
+  .tabpanel{padding:16px;gap:22px}
+  .tabsbar{gap:6px;margin:28px 0 18px}.tabbtn{padding:8px 14px;font-size:12.5px}
+  .split,.split.rev{gap:26px}
+  .block{padding:30px 0}
+  .phero{padding:104px 0 16px}
+  .ctaband{padding:22px;margin-bottom:40px}
+  .try-in{gap:34px}
+  .diagram .node{min-width:150px;padding:14px 16px}
+  h2{margin-bottom:12px}
+  .sec-grid{gap:10px}
+  footer{padding:38px 0 28px}
+}
+@media(max-width:640px){.cmp{font-size:12px}.cmp th,.cmp td{padding:10px 10px}}
+@media(max-width:400px){.hero h1{font-size:30px}.btn{padding:10px 16px;font-size:13.5px}}
+
+"""
+
+JS = """
+const nav=document.getElementById('nav');
+addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>8),{passive:true});
+const mb=document.getElementById('menubtn');
+if(mb){const close=()=>{nav.classList.remove('open');mb.setAttribute('aria-expanded','false');document.body.style.overflow=''};
+mb.addEventListener('click',()=>{const o=nav.classList.toggle('open');
+mb.setAttribute('aria-expanded',o);document.body.style.overflow=o?'hidden':''});
+document.querySelectorAll('.mmenu a').forEach(a=>a.addEventListener('click',close));
+/* the ways out a reader expects: Escape, and the empty space around the list */
+addEventListener('keydown',e=>{if(e.key==='Escape'&&nav.classList.contains('open'))close()});
+const mm=document.getElementById('mmenu');
+if(mm)mm.addEventListener('click',e=>{if(e.target===mm)close()});
+addEventListener('resize',()=>{if(innerWidth>820)close()});}
+const yr=document.getElementById('yr'); if(yr) yr.textContent=new Date().getFullYear();
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+const cio=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;cio.unobserve(e.target);
+const el=e.target,end=parseInt(el.dataset.count,10),t0=performance.now(),dur=1300;
+const fmt=n=>n.toLocaleString('en-US');
+const tick=t=>{const p=Math.min(1,(t-t0)/dur),ease=1-Math.pow(1-p,3);
+el.textContent=fmt(Math.round(end*ease));if(p<1)requestAnimationFrame(tick)};
+requestAnimationFrame(tick)}),{threshold:.4});
+document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
+document.querySelectorAll('.yt[data-yt]').forEach(box=>{
+  const id=box.dataset.yt;
+  const q=box.classList.contains('wide')?'maxresdefault':'hqdefault';
+  box.style.backgroundImage=`url('https://i.ytimg.com/vi/${id}/${q}.jpg')`;
+  box.addEventListener('click',()=>{
+    if(box.querySelector('iframe'))return;
+    const f=document.createElement('iframe');
+    f.src=`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+    f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    f.allowFullscreen=true;
+    box.textContent='';box.appendChild(f);
+  },{once:false});
+});
+document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabbtn').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.tabpanel').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  document.getElementById('tp-'+b.dataset.t).classList.add('on');
+}));
+const tf=document.getElementById('trialForm');
+if(tf){const API='REPLACE_API/api/public/trial-request';
+const post=b=>fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)});
+tf.addEventListener('submit',async ev=>{ev.preventDefault();
+const $=id=>document.getElementById(id);const err=$('f-err'),ok=$('f-ok'),btn=$('f-btn');
+err.style.display='none';err.textContent='';
+const name=$('f-name').value.trim(),email=$('f-email').value.trim();
+if(name.length<2){err.textContent='Please give your name.';err.style.display='block';return}
+if(!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)){err.textContent='That email address does not look right.';err.style.display='block';return}
+const planEl=$('f-plan');const plan=planEl?planEl.value:'trial';
+const body={name,email,company:$('f-company').value.trim(),role_title:$('f-role').value.trim(),
+message:$('f-msg').value.trim(),plan:plan,website:$('f-web').value};
+btn.disabled=true;btn.textContent='Sending…';
+try{let r;
+try{r=await post(body)}
+catch(_e){await new Promise(res=>setTimeout(res,1600));r=await post(body)}
+if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'The request could not be sent.');
+tf.querySelectorAll('input,textarea,select,button').forEach(x=>x.disabled=true);
+ok.style.display='block';btn.textContent='Requested ✓';
+}catch(e){
+const mail='mailto:EMAIL?subject='+encodeURIComponent('Trial request — '+name)
++'&body='+encodeURIComponent('Name: '+name+'\\nEmail: '+email+'\\nCompany: '+body.company
++'\\nRole: '+body.role_title+'\\n\\n'+body.message);
+err.innerHTML=(e.message||'Could not reach the server right now.')
++' Nothing typed was lost — <a href="'+mail+'" style="color:inherit;text-decoration:underline;font-weight:600">send the same request by e-mail</a> and it reaches us at EMAIL.';
+err.style.display='block';btn.disabled=false;btn.textContent=labelFor(plan)}});
+const labelFor=v=>v==='personal'?'Ask for the personal plan':v==='company'?'Ask about a company licence':'Request my free 15-day trial';
+const syncBtn=()=>{const pe=document.getElementById('f-plan'),b=document.getElementById('f-btn');
+if(pe&&b&&b.textContent.indexOf('✓')<0&&!b.disabled)b.textContent=labelFor(pe.value)};
+const pe0=document.getElementById('f-plan');
+if(pe0){pe0.addEventListener('change',syncBtn);
+/* A pricing button links here already knowing which plan the reader wants.
+   The plan travels in the query string, so the #request fragment still lands
+   on the form on its own if this script never runs. The older
+   "#try?plan=x" links stay understood — they are out in the world. */
+const readPlan=()=>{
+  const q=new URLSearchParams(location.search).get('plan')
+    ||(location.hash.split('plan=')[1]||'');
+  const v=q.replace(/[^a-z]/g,'');
+  return (v==='personal'||v==='company')?v:''};
+const named={personal:'the personal plan',company:'a company licence'};
+const applyPlan=(want,scroll)=>{
+  if(!want)return;
+  pe0.value=want;syncBtn();
+  const c=document.getElementById('f-chosen');
+  if(c){c.innerHTML='You chose <b>'+named[want]+'</b>. Your details are all that is missing.';
+        c.hidden=false;}
+  if(scroll){const f=document.getElementById('request');
+    if(f)f.scrollIntoView({behavior:'smooth',block:'start'});}};
+/* A new link carries #request and the browser scrolls there by itself. An
+   older #try?plan=x link matches no element, so this has to do the scrolling
+   — and the url is tidied to the current form on the way past. */
+const p0=readPlan();
+if(p0){const legacy=location.hash.indexOf('request')<0;
+  if(legacy)history.replaceState(null,'','?plan='+p0+'#request');
+  applyPlan(p0,legacy);}
+/* Clicking the same button while already on this page changes the url without
+   reloading, so the choice has to be picked up here too — otherwise the form
+   still said "free 15-day trial" after the reader asked for the paid plan. */
+document.querySelectorAll('a[data-plan]').forEach(a=>a.addEventListener('click',ev=>{
+  const want=a.dataset.plan;
+  if(!document.getElementById('request'))return;      /* another page · let it navigate */
+  ev.preventDefault();
+  history.replaceState(null,'','?plan='+want+'#request');
+  applyPlan(want,true);}));
+syncBtn();}}
+""".replace("REPLACE_API", APP).replace("EMAIL", EMAIL)
+
+
+import hashlib
+
+def _asset_ver():
+    h = hashlib.sha1((CSS + JS).encode()).hexdigest()[:8]
+    return h
+
+ASSET_VER = None  # filled after CSS/JS are final
+
+
+def write_page(fname, html, priority="0.6", changefreq="monthly"):
+    """Write one page, and remember it for the sitemap.
+
+    The canonical url is filled in here rather than in the head template
+    because only the writer knows which file the html is about to become.
+    index.html is canonicalised to the bare domain, which is the address
+    people actually link to."""
+    slug = "" if fname == "index.html" else fname
+    canonical = f"{SITE}/{slug}"
+    html = html.replace("__CANONICAL__", canonical)
+    # social previews need absolute urls; relative ones are ignored by crawlers
+    html = html.replace('property="og:image" content="img/',
+                        f'property="og:image" content="{SITE}/img/')
+    (ROOT / fname).write_text(stamp(html), encoding="utf-8")
+    PAGES_WRITTEN.append((slug, priority, changefreq))
+
+
+def write_sitemap():
+    """A sitemap Google can be handed directly, plus the robots.txt line that
+    points at it. Both are generated, never hand-written, so a new page can
+    never be missing from them."""
+    import datetime
+    today = datetime.date.today().isoformat()
+    seen, urls = set(), []
+    for slug, priority, changefreq in PAGES_WRITTEN:
+        if slug in seen:
+            continue
+        seen.add(slug)
+        urls.append(
+            "  <url>\n"
+            f"    <loc>{SITE}/{slug}</loc>\n"
+            f"    <lastmod>{today}</lastmod>\n"
+            f"    <changefreq>{changefreq}</changefreq>\n"
+            f"    <priority>{priority}</priority>\n"
+            "  </url>")
+    (ROOT / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "\n".join(urls) + "\n</urlset>\n", encoding="utf-8")
+    (ROOT / "robots.txt").write_text(
+        "# Engineering Workspace — engspace.app\n"
+        "User-agent: *\n"
+        "Allow: /\n"
+        "\n"
+        f"Sitemap: {SITE}/sitemap.xml\n", encoding="utf-8")
+    return len(urls)
+
+
+_IMG_VER: dict = {}
+
+
+def img_ver(name: str) -> str:
+    """r151 · a picture's version comes from the PICTURE.
+
+    It used to come from ASSET_VER, a hash of the CSS and JS. Replace a
+    screenshot without touching the styling and the URL never changed, so
+    Cloudflare kept serving the old picture for hours and the built copy on
+    disk was never refreshed either. Hashing the file's own bytes means a new
+    screenshot gets a new URL the moment it lands, and an unchanged one keeps
+    its cache."""
+    if name not in _IMG_VER:
+        f = ROOT / "img" / name
+        try:
+            _IMG_VER[name] = hashlib.sha1(f.read_bytes()).hexdigest()[:8]
+        except OSError:
+            _IMG_VER[name] = ASSET_VER or "0"
+    return _IMG_VER[name]
+
+
+def _stamp_imgs(html: str) -> str:
+    def one(m):
+        attr, name = m.group(1), m.group(2)
+        return f'{attr}="img/v{img_ver(name)}-{name}"'
+    return re.sub(r'(src|content|poster)="img/([A-Za-z0-9_.-]+\.(?:webp|jpg|png))"',
+                  one, html)
+
+
+def stamp(html):
+    """Version every asset URL so caches can never mix old CSS with new HTML."""
+    v = ASSET_VER
+    html = html.replace('href="assets/site.css"', f'href="assets/site.css?v={v}"')
+    html = html.replace('src="assets/site.js"', f'src="assets/site.js?v={v}"')
+    html = html.replace('href="assets/mark.svg"', f'href="assets/mark.svg?v={v}"')
+    html = html.replace('src="assets/mark.svg"', f'src="assets/mark.svg?v={v}"')
+    return _stamp_imgs(html)
+
+
+HEAD = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5CB1JQXHBM"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){{dataLayer.push(arguments);}}
+  gtag('js', new Date());
+  gtag('config', 'G-5CB1JQXHBM');
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<meta name="description" content="{desc}">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{desc}">
+<meta property="og:image" content="img/dashboard.webp">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="EngSpace · Engineering Workspace">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="__CANONICAL__">
+<meta property="og:url" content="__CANONICAL__">
+<link rel="icon" type="image/svg+xml" href="assets/mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<nav id="nav"><div class="wrap nav-in">
+  <a class="mark" href="index.html"><img src="assets/mark.svg" alt="EW"><span class="mname">Engineering Workspace</span></a>
+  <div class="nav-links">
+    <a href="gate.html">Before you send</a>
+    <a href="index.html#showcase" {n_show}>The workspace</a>
+    <a href="index.html#compare" {n_cmp}>Why us</a>
+    <a href="pricing.html" {n_pri}>Pricing</a>
+    <a href="index.html#proven">Proven</a>
+    <a href="index.html#security" {n_sec}>Security</a>
+  </div>
+  <a class="btn btn-primary btn-sm navtry" href="index.html#try">Try the app</a>
+  <button class="menubtn" id="menubtn" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</div>
+</nav>
+<div class="mmenu" id="mmenu">
+  <div class="wrap">
+    <div class="mm-cols">
+      <div class="mm-col">
+        <div class="mm-group">On this site</div>
+        <div class="mm-list">
+          <a href="gate.html">Before you send — the outbound check</a>
+          <a href="index.html#showcase">The workspace</a>
+          <a href="index.html#company">For your company — six commitments</a>
+          <a href="index.html#engine">The engine — indexing</a>
+          <a href="index.html#compare">Why us — against the field</a>
+          <a href="pricing.html">Pricing — personal and company</a>
+          <a href="requirements.html">Will it run on my machine?</a>
+          <a href="index.html#film">Watch the 90-second film</a>
+          <a href="index.html#films">The walkthrough library — eleven films</a>
+          <a href="index.html#proven">Proven on a live mega-project</a>
+          <a href="index.html#security">Security</a>
+        </div>
+      </div>
+      <div class="mm-col">
+        <div class="mm-group">Explore in depth</div>
+        <div class="mm-list">
+          <a href="gate.html">Before you send</a>
+          <a href="dashboard.html">Dashboard</a>
+          <a href="workflow.html">Design Workflow</a>
+          <a href="registers.html">Registers</a>
+          <a href="registers.html#claims">Claims</a>
+          <a href="pour.html">Before the pour</a>
+          <a href="search.html">Search &amp; Ask</a>
+          <a href="comms.html">Mail &amp; Follow-ups</a>
+          <a href="studios.html">Studios</a>
+          <a href="calculators.html">Calculators</a>
+          <a href="assistant.html">Assistant &amp; AI</a>
+          <a href="platform.html">Platform</a>
+          <a href="proven.html">Proven</a>
+        </div>
+      </div>
+      <div class="mm-col">
+        <div class="mm-group">Trust</div>
+        <div class="mm-list">
+          <a href="about.html">About — who builds it</a>
+          <a href="security.html">Security &amp; architecture</a>
+          <a href="proven.html#measured">The numbers, measured</a>
+          <a href="gate.html#break">Try to break it</a>
+          <a href="terms.html">Terms</a>
+          <a href="privacy.html">Privacy</a>
+        </div>
+      </div>
+    </div>
+    <div class="mm-cta">
+      <a class="btn btn-primary" href="index.html#request">Try the live app &rarr;</a>
+    </div>
+  </div>
+</div>
+"""
+
+FOOT = f"""
+<footer><div class="wrap">
+  <div class="f-in">
+    <div class="f-brand">
+      <span class="mark"><img src="assets/mark.svg" style="width:26px;height:26px" alt="EW"> EngSpace</span>
+      <p>The Engineering Workspace — it stops you sending something wrong, and it keeps the
+      record that proves you were right. Built inside the delivery of a mega-project, and it
+      runs on infrastructure you own.</p>
+    </div>
+    <div class="f-col">
+      <b>Product</b>
+      <a class="lead" href="index.html#request">Request a trial</a>
+      <a href="{APP}">Open the app</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="requirements.html">System requirements</a>
+      <a href="index.html#films">The walkthrough films</a>
+      <a href="gate.html#break">Try to break it</a>
+    </div>
+    <div class="f-col">
+      <b>Trust</b>
+      <a href="about.html">About</a>
+      <a href="security.html">Security &amp; architecture</a>
+      <a href="proven.html#measured">The numbers, measured</a>
+      <a href="index.html#company">Six commitments</a>
+    </div>
+    <div class="f-col">
+      <b>Contact</b>
+      <a href="mailto:{EMAIL}">{EMAIL}</a>
+      <a href="https://www.youtube.com/@engspaceapp" target="_blank" rel="noopener">YouTube channel</a>
+      <a href="https://abokhatwa.com" target="_blank" rel="noopener">The founder&#8217;s site</a>
+    </div>
+  </div>
+  <div class="f-bottom">
+    <div>&#169; <span id="yr">2026</span> Mohamed Abokhatwa &#183; Saudi Arabia &#183; all rights reserved.
+    The software, its interface and its intelligence engine are proprietary.</div>
+    <div class="f-legal">
+      <a href="about.html">Who builds it</a>
+      <a href="terms.html">Terms</a>
+      <a href="privacy.html">Privacy</a>
+    </div>
+  </div>
+</div></footer>
+<script src="assets/site.js"></script>
+</body>
+</html>
+"""
+
+
+def page_head(title, desc):
+    return HEAD.format(title=title, desc=desc, n_show="", n_eng="", n_cmp="", n_sec="", n_pri="")
+
+
+
+
+def caps(intro, groups):
+    """The complete capability list — every feature, named."""
+    out = [f'<div class="capshead"><div class="eyebrow">Every capability, declared</div>'
+           f'<h2 style="font-size:24px">The complete list.</h2>'
+           f'<p class="sub" style="font-size:14px">{intro}</p></div>']
+    for title, items in groups:
+        cards = "".join(f'<div class="cap"><b>{n}</b><span>{d}</span></div>' for n, d in items)
+        out.append(f'<div class="capgroup"><h3>{title}</h3><div class="caps">{cards}</div></div>')
+    return "".join(out)
+
+
+def versus(title, rows):
+    """Against the field — ours vs the archetypes, feature by feature."""
+    body = "".join(f'<div class="vsrow"><div class="us">{a}</div><div class="them">{b}</div></div>'
+                   for a, b in rows)
+    return (f'<div class="vsbox reveal"><div class="vshead">{title}</div>{body}</div>'
+            f'<p style="font-size:11.5px;color:var(--ink3);margin-top:10px">'
+            f'"The field" is the usual toolchain — the per-user construction cloud and the '
+            f'separate applications around it. Good tools; the difference here is one integrated '
+            f'record, on your own server.</p>')
+
+
+# ---------------- showcase tabs (index) ----------------
+TABS = [
+    ("dash", "Dashboard", "Your radar", "dashboard.webp", "dashboard.html",
+     "A project-health score you can interrogate, an AI morning brief, and one “Needs attention” list ranked across registers, workflows, reviews and mail.",
+     ["Every overdue thing in the project, one ranked list", "KPI tiles with real day-by-day sparklines", "Click any row — you land on the item itself"]),
+    ("wf", "Design Workflow", "The EDL, alive", "wfdetail.webp", "workflow.html",
+     "Deliverables move through real sign-off chains — originate, check, approve, DC, issue — with working-day deadlines, escalation, response codes and as-builts.",
+     ["Proven at 5,300 rows and 14 engineers acting in parallel", "Batch approvals, delegation for leave, automatic escalation", "Consultant response codes close the loop — C/D reopen the chain themselves"]),
+    ("reg", "Registers", "The approval clock", "registers.webp", "registers.html",
+     "RFIs, submittals, shop drawings, risks — one consistent grid that imports your existing exports and shows who is holding what, oldest first.",
+     ["Import the Aconex export you already have — columns map themselves", "Excel and PDF out, chase packs in one press", "Feeds the claims ledger automatically"]),
+    ("clm", "Claims", "Evidence on autopilot", "claims.webp", "registers.html#claims",
+     "Every day a submittal sits beyond its contractual review allowance is recorded as entitlement evidence — and the monthly exhibit is one press away.",
+     ["Held-vs-allowed clocks on every open item", "Notice deadlines tracked — never miss a 28-day clause", "Word evidence pack with dates and references"]),
+    ("pour", "Before the pour", "The date that cannot move", "pour.webp", "pour.html",
+     "The concrete pouring plan is the one date on a construction site that will not wait. This holds every pour against the shop drawings and submittals that must be approved before it — and tells you the number of days you asked to be told early, while there is still time to do something.",
+     ["You set the warning: flag me N days before the pour", "It matches by location and by trade, and always shows its reasoning", "Confirm or dismiss a link by hand and your decision outranks the matcher — and survives the next import"]),
+    ("srch", "Search & Ask", "Page-cited answers", "search.webp", "search.html",
+     "Ask across every indexed document — specifications, drawings, letters, even scans — and get answers that cite the exact page.",
+     ["Semantic + keyword search with reranking, on your own server", "Arabic and English, scanned documents included", "⌘K palette from anywhere in the app"]),
+    ("mail", "Mail & Follow-ups", "Nothing slips", "followups.webp", "comms.html",
+     "Your sent mail becomes tracked promises: replies detected automatically, chasers drafted, working days counted on your weekend. Attachments open in place, whole threads read back with a summary on demand, and handwritten meeting notes come back as numbered briefs.",
+     ["Meeting prep packs assembled from mail, calendar and registers", "Reads and drafts only — it never sends anything itself", "Connect YOUR account; sign-in happens at microsoft.com"]),
+    ("stud", "Studios", "Drawings in the browser", "pdfstudio.webp", "studios.html",
+     "Mark up PDF drawings — clouds, callouts, stamps, RFI-linked comments — open DWG/DXF directly, and compare two revisions with every change highlighted.",
+     ["A real review, live: cloud, callouts and a FOR REVIEW stamp on the sheet", "Open from the project, OneDrive, mail attachments or your PC", "Exports look exactly as you drew them"]),
+    ("calc", "Calculators", "43 verified tools", "calculators.webp", "calculators.html",
+     "Forty-three engineering calculators — hydraulics, HVAC (fifteen of them), electrical, fire, drainage, plumbing, vertical transport — each showing its formula and its assumptions with the result.",
+     ["Pump power to genset sizing to lift traffic — in the workspace, not a spreadsheet", "Every result carries the formula it used", "The Assistant uses the same calculators in documents"]),
+    ("ai", "Assistant & AI", "Grounded, honest", "assistant.webp", "assistant.html",
+     "A project-grounded assistant that searches your evidence, calculates with verified formulas and writes deliverables on your letterhead — with per-user AI accounts, badged and billed honestly.",
+     ["Cites (document, p.X) — or says ⟨TBC⟩, never invents", "Keeps your company template's cover, footer and contents", "Each user brings their own AI key; local features never need one"]),
+    ("plat", "Platform", "The operating system", "tour.webp", "platform.html",
+     "Programme, variations, AI document reviews, multi-project workspaces, client portal, security, backups, automations — the frame that makes the pillars one product.",
+     ["Roles, 2FA, audit trail, signed updates, encrypted secrets", "Hourly automations chase so people don't have to", "Teaches itself: tour, manual, living demo project"]),
+]
+
+
+def showcase():
+    btns, panels = [], []
+    for i, (key, label, golden, img, href, desc, points) in enumerate(TABS):
+        on = " on" if i == 0 else ""
+        btns.append(f'<button class="tabbtn{on}" data-t="{key}">{label}</button>')
+        lis = "".join(f"<div>{p}</div>" for p in points)
+        panels.append(f'''<div class="tabpanel{on}" id="tp-{key}">
+  <a class="shot gold" href="{href}"><img src="img/{img}" alt="{label}" loading="lazy"></a>
+  <div><span class="golden">{golden}</span><h3>{label}</h3>
+    <p style="font-size:14px;color:var(--ink2)">{desc}</p>
+    <div class="checks">{lis}</div>
+    <a class="more" href="{href}">Explore {label} in depth →</a>
+  </div></div>''')
+    return '<div class="tabsbar">' + "".join(btns) + "</div>" + "".join(panels)
+
+
+# ---------------- comparison ----------------
+# r144, after a real reader's misread: comparing against the per-seat PDF
+# application made the product read as a documentation-control tool. The
+# table now stands against ONE archetype — the construction cloud — and the
+# rows are grouped so the frame is unmissable: engineering intelligence
+# first, management control second, and the document tools named last as
+# the supporting cast they are.
+CMP_GROUPS = [
+    ("Design & engineering intelligence",
+     "The reason it exists — nothing in the market does these.", [
+        ("Checks what you are about to SEND against the specification it cites",
+         "✓", "✗"),
+        ("Finds the clause elsewhere in the same section that contradicts your proposal",
+         "✓ <span class='half-note'>reads the whole section</span>", "✗"),
+        ("Predicts how the Engineer will answer, from their own prior rulings",
+         "✓", "✗"),
+        ("What else a proposed change obliges — approved submittals, sheets, prior rulings",
+         "✓", "✗"),
+        ("Standing register: which code editions the contract binds vs what is on the shelf",
+         "✓", "✗"),
+        ("Requirements inside one specification that cannot both be satisfied, found automatically",
+         "✓", "✗"),
+        ("“Has the Engineer ruled on this before?” answered from your own correspondence",
+         "✓", "△ <span class='half-note'>keyword search only</span>"),
+        ("Ask the whole project archive — answers cite the exact page, engine runs locally",
+         "✓ <span class='half-note'>no per-question cost</span>",
+         "△ <span class='half-note'>their cloud AI, extra cost</span>"),
+        ("43 verified engineering calculators inside the workspace",
+         "✓", "✗"),
+    ]),
+    ("Design & construction management",
+     "The office run end to end — with the clocks that make people move.", [
+        ("Design sign-off chains with codes A–D, delegation, batch actions, escalation",
+         "✓", "△ <span class='half-note'>generic review steps</span>"),
+        ("Shop drawings held against the POURING PLAN — flagged the days early you choose",
+         "✓ <span class='half-note'>you set how many days early</span>", "✗"),
+        ("How long this project actually takes to answer, measured from your own record",
+         "✓", "△ <span class='half-note'>reports, not entitlement</span>"),
+        ("Scope tracked, variations registered — scope creep caught early",
+         "✓ <span class='half-note'>with comment screening</span>",
+         "△ <span class='half-note'>change logs only</span>"),
+        ("Registers feeding a claims entitlement ledger automatically",
+         "✓", "△ <span class='half-note'>logs, no entitlement clocks</span>"),
+        ("A site photograph checked against the APPROVED SUBMITTAL, not a generic checklist",
+         "✓", "△ <span class='half-note'>checklist inspections</span>"),
+        ("Speak a snag on site and it files itself as the right kind of record",
+         "✓ <span class='half-note'>on-device, no AI account</span>",
+         "△ <span class='half-note'>typed forms</span>"),
+        ("Head-office view across every job: turnaround, return reasons, repeat conflicts",
+         "✓", "△ <span class='half-note'>dashboards, not causes</span>"),
+        ("A read-only client progress portal — every element switchable by YOUR company",
+         "✓ <span class='half-note'>server-enforced</span>",
+         "△ <span class='half-note'>fixed dashboards</span>"),
+    ]),
+    ("One record, one price",
+     "Everything above shares one project record on hardware you own — "
+     "documentation control included as the supporting cast, not the product.", [
+        ("Outlook integrated: replies detected, chasers drafted, working-day clocks",
+         "✓", "✗ <span class='half-note'>notifications only</span>"),
+        ("Drawing studios built in — PDF markup, DWG/DXF opening, revision compare",
+         "✓ <span class='half-note'>included</span>",
+         "△ <span class='half-note'>viewer-grade</span>"),
+        ("Arabic letters and scanned documents readable and searchable",
+         "✓", "△"),
+        ("Schedule, variations, email, calendar and notifications — one platform",
+         "✓", "△ <span class='half-note'>separate modules, separate prices</span>"),
+        ("Runs on your hardware — your documents never live in someone's cloud",
+         "✓ <span class='half-note'>one workspace price</span>",
+         "✗ <span class='half-note'>per user / month</span>"),
+        ("An individual engineer can buy it for their own desk",
+         f"✓ <span class='half-note'>${PERSONAL_MONTHLY} a month</span>",
+         "✗ <span class='half-note'>enterprise contract</span>"),
+        ("Teaches itself: guided tour, manual, living demo project",
+         "✓", "△"),
+    ]),
+]
+
+
+# ---------------- r150 · pricing ----------------
+# Two doors, deliberately different shapes. The personal plan carries a real
+# number because an individual decides alone and will not write an e-mail to
+# find out; the company licence stays a conversation because it is one.
+def plans_block():
+    return f"""<div class="plans">
+  <div class="plan feat reveal">
+    <span class="ribbon">For one engineer</span>
+    <h3>Personal</h3>
+    <div class="who">You, your project, your machine</div>
+    <div class="amt"><b>${PERSONAL_MONTHLY}</b><span>per month</span></div>
+    <div class="sar">≈ SAR {int(PERSONAL_MONTHLY * 3.75)} · or ${PERSONAL_YEARLY} a year — two months free · cancel any month</div>
+    <p class="pbody">The whole workspace for one person on one project. Not a cut-down
+    edition: the same specification reading, the same outbound check, the same studios and
+    calculators the company plan gets.</p>
+    <div class="checks">
+      <div>One engineer, one project — every feature in the product</div>
+      <div>Before you send, Before the pour, registers, claims, studios, 43 calculators</div>
+      <div>Your documents stay on your own machine · nothing is uploaded to us</div>
+      <div>AI features run on your own AI key, so you control that cost separately</div>
+      <div>Cancel any month · your files were never ours to hold</div>
+    </div>
+    <div class="cta">
+      <a class="btn btn-primary" href="index.html?plan=personal#request" data-plan="personal">Ask for the personal plan</a>
+      <div class="fine">Start with the free 15-day trial if you would rather look first.</div>
+    </div>
+  </div>
+  <div class="plan reveal">
+    <h3>Company</h3>
+    <div class="who">A team, a floor, a project office</div>
+    <div class="amt"><span class="ask">Annual licence</span></div>
+    <div class="sar">One price for the workspace · unlimited engineers on it</div>
+    <p class="pbody">No per-seat bill and no per-module unlock. Everything the personal plan
+    has, plus the parts a company needs: many projects, roles, the client portal, the
+    cross-project view and the administration around them.</p>
+    <div class="checks">
+      <div>Unlimited engineers — adding the fourteenth costs nothing</div>
+      <div>Many projects, roles and permissions, audit trail, signed updates</div>
+      <div>Client progress portal · you choose what each client sees</div>
+      <div>Across-projects intelligence: who answers, what repeats, what to fix</div>
+      <div>Runs on your server or your office machine · your data never leaves it</div>
+    </div>
+    <div class="cta">
+      <a class="btn btn-ghost" href="index.html?plan=company#request" data-plan="company">Talk about a company licence</a>
+      <div class="fine">Pricing conversations start after you have seen it on your own project.</div>
+    </div>
+  </div>
+</div>
+<p class="plannote"><b>How paying works today.</b> Ask for the plan you want and a person answers —
+there is no card form on this site yet. Once we have agreed, you receive an invoice and then a
+licence key you paste into the app. The key carries your name and its dates; nothing phones home,
+and nothing is ever switched off remotely mid-project.</p>"""
+
+
+def plan_table():
+    rows = [
+        ("Every engineering feature", "yes", "yes"),
+        ("Before you send · the outbound check", "yes", "yes"),
+        ("Before the pour · shop drawings against the pouring plan", "yes", "yes"),
+        ("Registers, claims ledger, programme, variations", "yes", "yes"),
+        ("PDF &amp; CAD studios, 43 calculators, Search &amp; Ask", "yes", "yes"),
+        ("Runs on your own machine · documents never leave it", "yes", "yes"),
+        ("People on the workspace", "One", "Unlimited"),
+        ("Projects", "One", "Unlimited"),
+        ("Roles, permissions and the audit trail", "no", "yes"),
+        ("Client progress portal", "no", "yes"),
+        ("Across every project · company intelligence", "no", "yes"),
+        ("Automations, feeds, Teams / Slack posts", "no", "yes"),
+        ("Billing", f"${PERSONAL_MONTHLY} monthly", "Annual licence"),
+    ]
+    body = ""
+    for label, a, b in rows:
+        def cell(v):
+            if v == "yes":
+                return '<td class="yes">✓</td>'
+            if v == "no":
+                return '<td class="no">—</td>'
+            return f"<td>{v}</td>"
+        body += f"<tr><td>{label}</td>{cell(a)}{cell(b)}</tr>"
+    return ('<div class="pscroll"><table class="ptable"><thead><tr><th>&nbsp;</th>'
+            '<th>Personal</th><th>Company</th></tr></thead><tbody>'
+            + body + "</tbody></table></div>")
+
+
+def cmp_table():
+    parts = []
+    for title, sub, rows in CMP_GROUPS:
+        parts.append(f"<tr class='grp'><td colspan='3'>{title}"
+                     f"<span class='gsub'>{sub}</span></td></tr>")
+        parts.extend(
+            f"<tr><td>{a}</td><td class='ew yes'>{b}</td>"
+            f"<td class='no'>{c}</td></tr>"
+            for a, b, c in rows)
+    return f'''<div class="cmp-wrap"><table class="cmp reveal"><thead><tr>
+<th></th><th class="ew">Engineering Workspace</th>
+<th>The construction cloud</th>
+</tr></thead><tbody>{"".join(parts)}</tbody></table></div>'''
+
+
+ASSET_VER = _asset_ver()
+
+
+# ---------------- the walkthrough films (YouTube, click-to-load) ----------------
+CHANNEL = "https://www.youtube.com/@engspaceapp"
+# The published series (v3, 26 Aug 2026). Every film was re-recorded against
+# the six-room sidebar and the r147-r152 build, so all eleven carry NEW video
+# ids — YouTube cannot swap the file on an existing video. The August cuts are
+# private. Order here is the order shown.
+VIDEOS = {
+    "overview":   ("BAX19HcAF3c", "Engineering Workspace, the full walkthrough in 5 minutes", "4:27"),
+    "gate":       ("n2ofnMcUTGE", "The outbound check that reads your specification before the Engineer does", "2:48"),
+    "pour":       ("EokUXUZO3A8", "The concrete date will not wait for your shop drawings", "1:53"),
+    "knowledge":  ("1s2m9tv7GTA", "The knowledge base that actually reads your project", "2:05"),
+    "registers":  ("KvcYTpHdDq8", "Registers that work for you, not the other way round", "1:36"),
+    "workflow":   ("V953S0hWhV0", "600 drawings, real approval chains, zero spreadsheet wars", "1:31"),
+    "claims":     ("HbvR64fG0iY", "The claims file that wrote itself while you worked", "1:14"),
+    "site":       ("pqNFhNON1Ws", "Snags you can speak, paper checked against the wall", "0:59"),
+    "daily":      ("URM3AzR5ygE", "The small tools that carry your working day", "1:12"),
+    "headoffice": ("zqvk81Jk9qI", "Across projects, and a client portal you control", "1:52"),
+    "ownit":      ("evXLLhXwiCs", "Where your data lives: your server, your record", "1:19"),
+}
+
+
+def yt(key, wide=False):
+    vid, title, length = VIDEOS[key]
+    return (f'<div class="yt{" wide" if wide else ""}" data-yt="{vid}" role="button" tabindex="0" '
+            f'aria-label="Play: {title}">'
+            f'<button class="ytplay" aria-hidden="true">▶</button>'
+            f'<div class="ytmeta"><span>{length} · WATCH</span><b>{title}</b></div></div>')
+
+
+def ytone(key, cap=""):
+    """One film embedded on a feature page, under its hero."""
+    c = f'<div class="shotcap" style="margin-top:12px">{cap}</div>' if cap else ""
+    return f'<div class="block ytone reveal" style="padding-top:6px">{yt(key)}{c}</div>'
+
+
+def films_section():
+    grid = yt("overview", wide=True) + "".join(
+        yt(k) for k in ("gate", "pour", "knowledge", "workflow", "registers",
+                        "claims", "site", "daily", "headoffice", "ownit"))
+    return f'''
+<section id="films"><div class="wrap">
+  <div class="eyebrow">The walkthrough library</div>
+  <h2>Eleven short films. The whole product.</h2>
+  <p class="sub">Every film is the real application moving on the living demo project — no slides,
+  no mock-ups. Start with the full walkthrough, then pick the part of your day you want back.</p>
+  <div class="ytgrid reveal">{grid}</div>
+  <div class="ytnote">Films play right here ·
+    <a href="{CHANNEL}" target="_blank" rel="noopener">visit the channel</a> for the full playlist.</div>
+</div></section>'''
+
+# ---------------- FAQ (index) + structured data ----------------
+FAQ = [
+    ("What is EngSpace, in one sentence?",
+     "EngSpace, the Engineering Workspace, is a project intelligence platform for "
+     "engineering and construction offices: it reads your contract, specifications, "
+     "drawings and correspondence, checks what you are about to issue against them, "
+     "and keeps registers, sign-off workflows, claims evidence, drawing studios and "
+     "a client portal around that one record, on a server you own."),
+    ("Where does my project data live?",
+     "On your own infrastructure. Documents, the search index and the database stay "
+     "on the machine your company operates; the engine reads, OCRs and answers "
+     "locally. Remote access happens through an encrypted tunnel with sign-in "
+     "always required, and nothing is stored in a vendor cloud."),
+    ("What does it cost?",
+     f"Two ways in. One engineer on one project pays ${PERSONAL_MONTHLY} a month "
+     f"(or ${PERSONAL_YEARLY} a year) and gets every feature. A company pays one annual "
+     "price for the workspace with unlimited engineers and projects. There is no per-seat "
+     "bill, no per-module unlock, and no charge for the calculators or the studios. "
+     "AI tasks run on your own AI key, so there is no per-question fee to us. "
+     "The full picture is on the pricing page, and a free 15-day trial comes first."),
+    ("Does it read Arabic documents?",
+     "Yes. Scanned Arabic letters and stamped drawings are OCRed and become "
+     "searchable alongside English, and the interface itself ships with a full "
+     "Arabic right-to-left option."),
+    ("How does the AI stay honest?",
+     "Every answer must cite its source, document and page. When the evidence is "
+     "not there, the assistant writes TBC instead of inventing, and a checker pass "
+     "tries to prove drafts wrong before you see them. Search, registers, workflows "
+     "and calculators are deterministic local features that need no AI account at all."),
+    ("How should I test it?",
+     "Request the trial — it installs on your own machine, so you can point it at "
+     "the real project without anything leaving your computer — and try to "
+     "break it: ask questions where two clauses conflict, where the wrong code "
+     "edition is cited, or where a previous Engineer response changed the "
+     "interpretation. Catching those is the whole point of the outbound check."),
+    ("What does the trial install need from my machine?",
+     "A 64-bit machine with 8 GB of memory (16 GB is comfortable) and room on an "
+     "SSD for your documents plus about 15% for the index. The installer carries "
+     "everything else — runtime, search models, Arabic-English OCR — and the "
+     "first run benchmarks your computer and tells you what it can comfortably "
+     "carry. The details are on the requirements page."),
+]
+
+
+def faq_section():
+    items = "".join(
+        f'<div class="cap" style="padding:17px 19px"><b style="font-size:13.5px">{q}</b>'
+        f'<span style="font-size:12.5px;margin-top:6px">{a}</span></div>'
+        for q, a in FAQ)
+    return f'''
+<section id="faq"><div class="wrap">
+  <div class="eyebrow">Asked before the trial</div>
+  <h2>Plain answers first.</h2>
+  <div class="caps" style="margin-top:30px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))">{items}</div>
+</div></section>'''
+
+
+def jsonld_blocks():
+    import json as _j
+    org = {
+        "@context": "https://schema.org", "@type": "Organization",
+        "name": "EngSpace", "alternateName": "Engineering Workspace",
+        "url": SITE, "logo": f"{SITE}/assets/mark.svg",
+        "email": EMAIL,
+        "founder": {"@type": "Person", "name": "Mohamed Abokhatwa",
+                    "url": "https://abokhatwa.com",
+                    "jobTitle": "Founder and engineer"},
+        "sameAs": ["https://www.youtube.com/@engspaceapp",
+                   "https://abokhatwa.com"],
+        "areaServed": "Middle East and worldwide",
+    }
+    app = {
+        "@context": "https://schema.org", "@type": "SoftwareApplication",
+        "name": "Engineering Workspace",
+        "alternateName": "EngSpace",
+        "url": SITE, "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Self-hosted server, used from any browser",
+        "description": ("Project intelligence for engineering offices: document-"
+                        "grounded AI with page citations, an outbound check for "
+                        "RFIs and submittals, registers, sign-off workflows, "
+                        "claims evidence, drawing studios, 43 calculators and a "
+                        "company-controlled client portal, on infrastructure you own."),
+        "inLanguage": ["en", "ar"],
+        # r150 · two real offers, so the personal price is machine-readable
+        "offers": [
+            {"@type": "Offer", "name": "Personal",
+             "price": str(PERSONAL_MONTHLY), "priceCurrency": "USD",
+             "description": ("One engineer on one project, every feature. "
+                             f"${PERSONAL_MONTHLY} per month, or ${PERSONAL_YEARLY} per year."),
+             "url": f"{SITE}/pricing.html",
+             "priceSpecification": {
+                 "@type": "UnitPriceSpecification",
+                 "price": str(PERSONAL_MONTHLY), "priceCurrency": "USD",
+                 "referenceQuantity": {"@type": "QuantitativeValue",
+                                       "value": 1, "unitCode": "MON"}}},
+            {"@type": "Offer", "name": "Company",
+             "priceCurrency": "USD", "description":
+             "One annual workspace licence, unlimited engineers and projects. Price on request.",
+             "url": f"{SITE}/pricing.html"},
+        ],
+        "featureList": [
+            "Outbound check against the specification before an RFI or submittal is sent",
+            "Shop drawings and submittals held against the concrete pouring plan",
+            "Page-cited answers across the whole document archive",
+            "Registers with an entitlement and delay ledger that computes itself",
+            "Deliverables list with real sign-off chains and escalation",
+            "PDF markup and DWG/DXF studios with revision compare",
+            "43 verified engineering calculators",
+            "Client progress portal the company controls figure by figure",
+        ],
+        "softwareVersion": "2.0",
+    }
+    faq = {
+        "@context": "https://schema.org", "@type": "FAQPage",
+        "mainEntity": [{"@type": "Question", "name": q,
+                        "acceptedAnswer": {"@type": "Answer", "text": a}}
+                       for q, a in FAQ],
+    }
+    DUR = {"overview": "PT4M27S", "gate": "PT2M48S", "pour": "PT1M53S",
+           "knowledge": "PT2M5S", "registers": "PT1M36S", "workflow": "PT1M31S",
+           "claims": "PT1M14S", "site": "PT59S", "daily": "PT1M12S",
+           "headoffice": "PT1M52S", "ownit": "PT1M19S"}
+    vids = []
+    for key, (vid, title, _len) in VIDEOS.items():
+        vids.append({
+            "@context": "https://schema.org", "@type": "VideoObject",
+            "name": title,
+            "description": f"{title} · a walkthrough film of the Engineering Workspace, recorded on the live demo project.",
+            "thumbnailUrl": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
+            "uploadDate": "2026-08-26",
+            "duration": DUR.get(key, "PT2M"),
+            "embedUrl": f"https://www.youtube-nocookie.com/embed/{vid}",
+            "url": f"https://youtu.be/{vid}",
+        })
+    blocks = [org, app, faq] + vids
+    return "".join(f'<script type="application/ld+json">{_j.dumps(b, ensure_ascii=False)}</script>'
+                   for b in blocks)
+
+
+# ---------------- index ----------------
+index = page_head(
+    "EngSpace · Engineering Workspace — it stops you sending something wrong, and it proves you were right",
+    "Reads your contract, specifications, drawings and correspondence, checks what you are about to issue against them, and keeps the record that protects you when the answer is slow. On infrastructure you own.")
+index += f"""
+<header class="hero" id="top"><div class="wrap">
+  <div class="eyebrow">Engineering intelligence for design &amp; construction offices</div>
+  <h1>It stops you sending<br>something <em>wrong</em>.<br>And it proves you were right.</h1>
+  <p class="sub">The workspace reads your contract, specifications, drawings and years of
+  correspondence — then checks what you are about to issue against them, and keeps the record that
+  protects you when the answer is slow. Registers, drawings, workflows and claims around it, on
+  infrastructure <b>you</b> own. Built inside the delivery of a mega-project, not in a demo lab.</p>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="#try">Try the live app →</a>
+    <a class="btn btn-ghost" href="#showcase">See what it does</a>
+  </div>
+  <div class="statband reveal">
+    <div class="stat"><div class="v"><span data-count="72000">72,000</span><span class="u">+</span></div>
+      <div class="l">Ask your archive</div><div class="s">documents indexed on one live project — every answer cites its exact page</div></div>
+    <div class="stat"><div class="v"><span data-count="43">43</span></div>
+      <div class="l">Engineering calculators</div><div class="s">pumps to gensets to lifts — the formula printed with every result</div></div>
+    <div class="stat"><div class="v"><span data-count="5300">5,300</span></div>
+      <div class="l">Sign-offs, proven</div><div class="s">EDL rows moving through real chains — 14 engineers in parallel, reconciled</div></div>
+    <div class="stat"><div class="v">100<span class="u">%</span></div>
+      <div class="l">Yours</div><div class="s">your hardware, one workspace price — no per-seat cloud, no data leaving</div></div>
+    <div class="stat"><div class="v">EN<span class="u">+</span>AR</div>
+      <div class="l">Reads everything</div><div class="s">scanned letters and stamped drawings, searchable in both languages</div></div>
+  </div>
+  <div class="frame reveal"><div class="bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="url">engineering-workspace — your project's front page</span></div>
+    <img src="img/dashboard.webp" alt="The dashboard" loading="eager">
+  </div>
+</div></header>
+
+<section id="gate" style="background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)"><div class="wrap">
+  <div class="eyebrow">The check that runs before anything leaves</div>
+  <h2>Your own documents already know<br>what is wrong with that letter.</h2>
+  <p class="sub">An RFI, a letter, a submittal cover, a claim notice. Paste it in and the workspace
+  retrieves the clauses it relies on — the whole section, not the sentence somebody remembered —
+  and answers six questions before the Engineer gets the chance to.</p>
+  <div class="vals">
+    <div class="val reveal"><div class="num">01</div><h3>Do the clauses say what you claim?</h3>
+      <p>Every specification section, drawing and code the draft leans on is retrieved and read. A quotation that does not survive its own source is found here, not in the response.</p></div>
+    <div class="val reveal"><div class="num">02</div><h3>Is there a clause that contradicts you?</h3>
+      <p>The one nobody thinks to look for: a requirement elsewhere in the same section that forbids exactly what you are proposing. A draft claiming compliance while breaching an unmentioned clause is worse than one that asks openly.</p></div>
+    <div class="val reveal"><div class="num">03</div><h3>Is that the edition your contract binds?</h3>
+      <p>A standing register of every code the contract binds, at which edition, against which edition is actually on your shelf. A section number taken from a later edition is a rejection that looks like a technicality and costs a full cycle.</p></div>
+    <div class="val reveal"><div class="num">04</div><h3>Are you deviating without saying so?</h3>
+      <p>Undeclared deviations are what turn a technical discussion into a credibility problem. Declared ones get approved. The check names each one and drafts the sentence that declares it.</p></div>
+    <div class="val reveal"><div class="num">05</div><h3>Have you made a claim one example destroys?</h3>
+      <p>"No longer available anywhere" invites a reviewer to spend ten minutes disproving you, and then to read the rest of your submission with suspicion. It is replaced with what was surveyed, when, and by whom.</p></div>
+    <div class="val reveal"><div class="num">06</div><h3>Is there a required response date?</h3>
+      <p>Without one, a six-week silence leaves no position worth arguing. The check refuses to call a draft ready until it says when an answer is needed and what that answer protects.</p></div>
+  </div>
+  <div class="diagram reveal" style="margin-top:40px">
+    <div class="node"><div class="t">Your draft</div><div class="d">RFI · letter · submittal cover<br>claim notice · method statement</div></div>
+    <div class="arrow">&#10148;</div>
+    <div class="node brain"><div class="t">Read against your own archive</div><div class="d">clauses retrieved and read whole —<br>editions, conflicts, acceptable makers,<br>and what this Engineer ruled before</div></div>
+    <div class="arrow">&#10148;</div>
+    <div class="node"><div class="t">Hold &#183; revise &#183; send</div><div class="d">with the clause that contradicts you<br><b style="color:var(--teal)">quoted, and where it sits</b></div></div>
+  </div>
+  <div style="text-align:center;margin-top:34px">
+    <a class="btn btn-ghost" href="gate.html">See everything the check reads &#8594;</a>
+  </div>
+</div></section>
+
+<section id="showcase"><div class="wrap">
+  <div class="eyebrow">One workspace, not seven apps</div>
+  <h2>Everything the office does. Choose a pillar — see it real.</h2>
+  <p class="sub">These are actual screens, not mock-ups. Every pillar has its own deep-dive page
+  with more screenshots and detail.</p>
+  {showcase()}
+</div></section>
+
+<section id="film"><div class="wrap">
+  <div class="eyebrow">Ninety seconds, one project morning</div>
+  <h2>Watch it work.</h2>
+  <p class="sub">No slides, no narrator, nothing staged — the real product moving through a real
+  morning: the brief, a question to the archive, the deliverable list, a workflow chain,
+  a claim, a drawing marked up, a calculation, the inbox.</p>
+  <div class="filmbox reveal">
+    <video controls preload="none" playsinline poster="img/film-poster.jpg" style="width:100%">
+      <source src="media/ew-demo.mp4" type="video/mp4">
+      Your browser cannot play this video — <a href="media/ew-demo.mp4">download it instead</a>.
+    </video>
+  </div>
+  <div class="filmcap">
+    <span><b>00:05</b> the morning brief</span>
+    <span><b>00:18</b> ask the archive</span>
+    <span><b>00:32</b> the deliverable list</span>
+    <span><b>00:45</b> a workflow chain</span>
+    <span><b>00:56</b> claims with citations</span>
+    <span><b>01:05</b> PDF studio</span>
+    <span><b>01:18</b> calculators</span>
+    <span><b>01:28</b> mail &amp; calendar</span>
+  </div>
+</div></section>
+
+{films_section()}
+
+
+<section id="company" style="background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)"><div class="wrap">
+  <div class="eyebrow">What this means for your company</div>
+  <h2>Six commitments. One workspace.</h2>
+  <p class="sub">Not features for a brochure — outcomes a delivery director signs their name against.</p>
+  <div class="vals">
+    <div class="val reveal"><div class="num">01</div><h3>Control the design workflow — and the process itself</h3>
+      <p>Design, review and approval chains with named owners and working-day clocks — and the process monitored end to end, so a defect in the flow (a step sat on, a chain skipped, a code unrecorded) is seen and fixed, never suffered silently.</p></div>
+    <div class="val reveal"><div class="num">02</div><h3>One complete workspace. Productive engineers.</h3>
+      <p>Drawings, registers, mail, calculators, search and AI in one place, one login, one record. The hours your engineers lose switching, exporting and re-finding come back as engineering.</p></div>
+    <div class="val reveal"><div class="num">03</div><h3>Track the scope. Eliminate scope creep.</h3>
+      <p>The scope of work tracked item by item, every variation registered the day it appears, and consultant comments screened automatically for hidden scope — creep is caught while it is still a sentence, not a cost.</p></div>
+    <div class="val reveal"><div class="num">04</div><h3>Discover claims — with proper citations</h3>
+      <p>The claims ledger builds entitlement evidence from the registers you already keep: held-vs-allowed clocks, notice windows, excess days — and every exhibit cites its documents, dates and references.</p></div>
+    <div class="val reveal"><div class="num">05</div><h3>The speed of indexing, the power of AI</h3>
+      <p>72,000+ documents indexed locally answer in seconds with the page cited — and AI composes, drafts and reviews on top of that evidence. Intelligence with receipts, at zero cost per question.</p></div>
+    <div class="val reveal"><div class="num">06</div><h3>The complete platform</h3>
+      <p>Schedule control, variations, email, calendar, notifications and a client portal your company fully controls — with registers, drawings, workflows and claims — one platform on your own hardware. No module gaps, no second subscription.</p></div>
+  </div>
+</div></section>
+
+<section id="engine" style="background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)"><div class="wrap">
+  <div class="eyebrow">The part nobody else explains</div>
+  <h2>Your documents already know the answers.<br>Indexing is how you ask them.</h2>
+  <p class="sub">Most engineering offices sit on tens of thousands of PDFs, drawings and letters
+  that only answer when someone remembers where to look. The workspace reads them all — once —
+  and turns them into a knowledge base that answers in seconds, with the page number to prove it.</p>
+  <div class="diagram reveal">
+    <div class="node"><div class="t">Your folders</div><div class="d">specs · drawings · letters<br>scans · registers · minutes</div></div>
+    <div class="arrow">➜</div>
+    <div class="node brain"><div class="t">The EW intelligence engine</div><div class="d">reads, OCRs (English + Arabic),<br>understands and indexes — on your machine</div></div>
+    <div class="arrow">➜</div>
+    <div class="node"><div class="t">Cited answers</div><div class="d">“…as clause 4.3.2 requires —<br><b style="color:var(--teal)">(Spec 22 60 00, p.41)</b>”</div></div>
+  </div>
+  <div class="split" style="margin-top:44px">
+    <div>
+      <h3 style="font-size:20px;margin-bottom:10px">What that looks like in real work</h3>
+      <p class="sub" style="font-size:14px">One question — “chilled water riser insulation thickness” —
+      and the workspace lines up the specification clause, the consultant's reply, the drawing legend
+      and the condensation calculation. Four documents, four page numbers, three seconds.</p>
+      <div class="checks">
+        <div>No per-question cost — the engine runs on your own server</div>
+        <div>Scans and Arabic letters are read, not skipped</div>
+        <div>New arrivals index themselves from watched folders</div>
+      </div>
+      <a class="more" href="search.html">Explore Search &amp; Ask in depth →</a>
+    </div>
+    <div class="shot reveal"><img src="img/search.webp" alt="Search results with page citations" loading="lazy"></div>
+  </div>
+</div></section>
+
+<section id="compare"><div class="wrap">
+  <div class="eyebrow">Say it plainly</div>
+  <h2>This is not a document platform.<br>Put it beside one and see.</h2>
+  <p class="sub">Measured against the per-user construction cloud — the platform an office is
+  usually offered. It manages documents well. It does not read them, check them, predict with
+  them or defend you with them. That difference is the product.</p>
+  {cmp_table()}
+  <p style="font-size:12px;color:var(--ink3);margin-top:14px">△ = partly, with effort or extra cost.
+  This is about integration, not disrespect: here the intelligence, the registers, the mail, the
+  calculators and the studios share <b>one project record on one server you own</b> — that is the
+  feature a per-user cloud cannot add.</p>
+</div></section>
+
+<section id="proven" style="padding-top:0"><div class="wrap">
+  <div class="ctaband reveal" style="margin-top:0">
+    <div style="flex:1;min-width:280px">
+      <div class="eyebrow">Proven in delivery</div>
+      <h3 style="font-size:22px;margin-top:6px">It was proven before it was sold.</h3>
+      <div style="font-size:13.5px;color:var(--ink2);margin-top:8px;max-width:640px">Written inside
+      the delivery of a live mega-project and used every working day since — the numbers at the top
+      of this page are measurements, not marketing. The full story, and what it means for your
+      data, is one page long.</div>
+    </div>
+    <a class="btn btn-ghost" href="proven.html">Read the proof →</a>
+  </div>
+</div></section>
+
+<section id="security" style="background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)"><div class="wrap">
+  <div class="eyebrow">Your data never leaves home</div>
+  <h2>Security the way an engineering office needs it.</h2>
+  <div class="sec-grid">
+    <div class="sec reveal"><b>On your infrastructure</b><span>Documents, index and database stay on your own machines, reached through an encrypted tunnel.</span></div>
+    <div class="sec reveal"><b>Sign-in, always</b><span>No anonymous access, rate-limited logins, two-factor enforced for administrators.</span></div>
+    <div class="sec reveal"><b>Roles that mean something</b><span>Admin, engineer, viewer — and client accounts that see a progress portal only, showing exactly what your company chose to share.</span></div>
+    <div class="sec reveal"><b>Project-pinned accounts</b><span>Trial and demo users are locked to a demo project. Your live projects do not exist for them.</span></div>
+    <div class="sec reveal"><b>Encrypted per-user secrets</b><span>Mail sign-ins and AI keys are stored encrypted per person — nobody sees anyone else's.</span></div>
+    <div class="sec reveal"><b>An audit trail that remembers</b><span>Logins, changes, approvals, escalations — who did what is built in, not bolted on.</span></div>
+  </div>
+</div></section>
+
+{faq_section()}
+
+<section id="learn"><div class="wrap">
+  <div class="split">
+    <div>
+      <div class="eyebrow">No training course required</div>
+      <h2>It teaches itself.</h2>
+      <p class="sub">First sign-in opens a one-minute guided tour that walks the real navigation,
+      role-aware. Behind it: a full manual, exact how-to hints on every settings card, and a living
+      demo project to practise on safely.</p>
+      <a class="more" href="assistant.html">See the assistant &amp; AI accounts →</a>
+    </div>
+    <div class="shot reveal"><img src="img/tour.webp" alt="The first-login guided tour" loading="lazy"></div>
+  </div>
+</div></section>
+
+<section id="try"><div class="wrap">
+  <div class="priceband reveal" id="pricing">
+    <div class="pb-1">Two ways in. <em>One engineer, or the whole office.</em></div>
+    <div class="pb-2">${PERSONAL_MONTHLY} a month for one person on one project · an annual licence with
+    unlimited engineers for a company. No per-seat cloud bill, no per-module unlock, nothing extra
+    for the calculators or the studios.</div>
+  </div>
+  """ + plans_block() + f"""
+  <p class="plannote" style="margin-top:18px"><a href="pricing.html" style="color:var(--teal);font-weight:600">See both plans side by side →</a></p>
+  <div class="try-in">
+    <div>
+      <div class="eyebrow">Free 15-day trial · full product · your machine</div>
+      <h2>Install it on your own machine — free for 15 days.</h2>
+      <p class="sub">Request a trial and the installer plus your personal activation code arrive
+      <b>by e-mail</b> — every trial is approved by a person, usually within a day. The workspace
+      runs entirely on your computer: your documents are indexed and searched there and never
+      leave it, so you can trial it on the real project, not a sanitized one.</p>
+      <div class="checks" style="margin-top:22px">
+        <div>15 days, the full product — every pillar, no cut-down demo build, no storage limits</div>
+        <div>Everything in one installer — search models and Arabic-English OCR included; the first run tells you what your computer can comfortably carry</div>
+        <div>Your trial clock starts when you activate, not when we send the code</div>
+        <div>Want AI tasks too? Paste your own AI key inside the app — you control the cost</div>
+        <div>Then try to break it: two clauses that conflict, a wrong code edition, a reversed ruling — that catch is the product</div>
+      </div>
+      <p style="margin-top:14px;font-size:13px;color:var(--ink3)">Rather look before installing?
+      Ask for a hosted demo account in the same form — a realistic demo project, nothing to set up.
+      · <a href="requirements.html" style="color:var(--teal);font-weight:600">What your machine needs →</a></p>
+      <p style="margin-top:26px;font-size:13px;color:var(--ink3)">Already have an account?
+      <a href="{APP}" style="color:var(--teal);font-weight:600">Open the app →</a></p>
+    </div>
+    <div id="request">
+      <form id="trialForm" novalidate>
+        <div id="f-chosen" class="chosen" hidden></div>
+        <div style="margin-bottom:14px">
+          <label for="f-plan">What are you asking for?</label>
+          <select id="f-plan" style="width:100%">
+            <option value="trial">The free 15-day trial</option>
+            <option value="personal">The personal plan · ${PERSONAL_MONTHLY} a month, one engineer</option>
+            <option value="company">A company licence · unlimited engineers</option>
+          </select>
+        </div>
+        <div class="frow">
+          <div><label for="f-name">Your name *</label><input id="f-name" required maxlength="120" autocomplete="name"></div>
+          <div><label for="f-email">Work email *</label><input id="f-email" type="email" required maxlength="200" autocomplete="email"></div>
+        </div>
+        <div class="frow">
+          <div><label for="f-company">Company</label><input id="f-company" maxlength="160" autocomplete="organization"></div>
+          <div><label for="f-role">Your role</label><input id="f-role" maxlength="120" placeholder="e.g. MEP Manager"></div>
+        </div>
+        <div><label for="f-msg">What would you use it for? (optional)</label>
+          <textarea id="f-msg" rows="3" maxlength="1000" placeholder="Project type, team size, the pain you want gone…"></textarea></div>
+        <div class="hp"><label>Website<input id="f-web" tabindex="-1" autocomplete="off"></label></div>
+        <button class="btn btn-primary" type="submit" id="f-btn" style="justify-content:center">Request my free 15-day trial</button>
+        <div class="err-msg" id="f-err"></div>
+        <div class="ok-msg" id="f-ok"><b>Request received.</b> A real person reviews every trial —
+        once approved, your sign-in details and trial dates arrive by e-mail, usually within a day.</div>
+        <p style="font-size:11px;color:var(--ink3)">By requesting a trial you agree we contact you about it.
+        Trial accounts are demo-scoped and may be closed at any time. No spam, ever.</p>
+      </form>
+    </div>
+  </div>
+</div></section>
+""" + jsonld_blocks() + FOOT
+write_page("index.html", index, priority="1.0", changefreq="weekly")
+
+
+# ---------------- feature pages ----------------
+def block(img, title, body, points=None, rev=False, cap="", anchor=""):
+    lis = "".join(f"<div>{p}</div>" for p in (points or []))
+    checks = f'<div class="checks">{lis}</div>' if lis else ""
+    aid = f' id="{anchor}"' if anchor else ""
+    caph = f'<div class="shotcap">{cap}</div>' if cap else ""
+    text = f'<div><h2 style="font-size:24px">{title}</h2><p class="sub" style="font-size:14.5px">{body}</p>{checks}</div>'
+    shot = f'<div><div class="shot reveal"><img src="img/{img}" alt="{title}"></div>{caph}</div>'
+    inner = (shot + text) if rev else (text + shot)
+    return f'<div class="block"{aid}><div class="split{" rev" if rev else ""}">{inner}</div></div>'
+
+
+def feature_page(fname, title, desc, crumb, hero_sub, blocks, prev, nxt):
+    h = page_head(f"{title} — Engineering Workspace", desc)
+    h += f'''
+<header class="phero"><div class="wrap">
+  <div class="crumb"><a href="index.html">Engineering Workspace</a> / {crumb}</div>
+  <div class="eyebrow">In depth</div>
+  <h1>{title}</h1>
+  <p class="sub" style="margin-top:16px">{hero_sub}</p>
+</div></header>
+<div class="wrap">{blocks}
+  <div class="ctaband reveal">
+    <div style="flex:1;min-width:260px"><h3>See it on a live workspace.</h3>
+    <div style="font-size:13px;color:var(--ink2);margin-top:4px">A real account inside a realistic demo project — request it in one minute.</div></div>
+    <a class="btn btn-primary" href="index.html#try">Try the live app →</a>
+  </div>
+  <div class="pn"><a href="{prev[1]}">← {prev[0]}</a><a href="{nxt[1]}">{nxt[0]} →</a></div>
+</div>'''
+    write_page(fname, h + FOOT, priority="0.7")
+
+
+feature_page("dashboard.html", "The Dashboard", "Project health, an AI brief and one ranked attention list.",
+    "Dashboard", "Your day starts on one page: how healthy the project is, what needs you first, and why — with every number clickable to its source.",
+    block("dashboard.webp", "A front page that thinks",
+          "The health score is not a decoration — hover it and it shows exactly how it is scored. KPI tiles carry real day-by-day sparklines, the delivery S-curve sits beside a next-7-days strip that knows your weekend, and the whole layout reorders per account.",
+          ["Explainable project-health score", "Customisable blocks, per user", "Live over WebSocket — no refreshing"])
+    + block("c_attention.webp", "One ranked list across every module",
+          "Overdue register items, follow-ups waiting too long, your own workflow steps, idle reviews, unscreened consultant comments — ranked by urgency in one feed. Click a row and you land on the item itself.",
+          ["Ranked: overdue → chases → your steps → idle reviews", "Every row deep-links to the exact item"], rev=True,
+          cap="The attention feed — the whole project's 'what needs me', ranked.")
+    + block("c_health.webp", "The morning brief — an AI task, clearly labelled",
+          "Three sharp sentences written from your real numbers: the most urgent thing, the week's momentum, one concrete action. It runs on an AI account — yours or the workspace's — and when none is connected the dashboard says so politely and everything else keeps working.",
+          ["Cached per day, per user, per project", "Never mistaken for an error — AI tasks are badged"],
+          cap="Health ring + assistant actions, cropped from the live screen.")
+    + caps("Everything the front page does — nothing hidden behind a demo call.", [
+        ("Intelligence", [
+            ("Project-health score", "One number, fully explainable — hover shows the exact scoring: overdue weight, delivery variance, review idle time."),
+            ("AI morning brief", "2–4 sentences from your real numbers; cached per day, per user, per project; refresh rewrites it."),
+            ("Needs-attention feed", "One ranked list across registers, workflows, follow-ups, reviews and consultant comments — urgency-ordered."),
+            ("Commercial radar line", "Unscreened consultant comments flagged — they may hide variation entitlements.")]),
+        ("Numbers that move", [
+            ("KPI tiles + sparklines", "Open, due-in-14, overdue, awaiting replies, reviews, your steps — each with a real 14-day sparkline."),
+            ("Delivery S-curve", "Planned vs actual earned progress from the EDL's stage weights."),
+            ("Next-7-days strip", "What lands each day — and it knows your weekend is not Saturday–Sunday."),
+            ("My workflow strip", "Your own pending sign-off steps, one click from acting on them.")]),
+        ("Behaviour", [
+            ("Per-user layout", "Reorder or hide any block; every account keeps its own dashboard."),
+            ("Live updates", "WebSocket push — approvals and arrivals appear without refreshing."),
+            ("Deep links", "Every row, tile and chip lands on the exact item, never a module home page."),
+            ("Quick actions", "Ask the assistant and new-register-item straight from the hero.")])])
+    + versus("Against the field — the front page", [
+        ("One ranked to-do across registers, mail, workflows and reviews", "Each product shows its own module's list — nobody merges the project"),
+        ("Health score you can interrogate", "Dashboards show counts; the WHY lives in someone's head"),
+        ("Weekend-aware 7-day lookahead (Fri–Sat native)", "Western-calendar assumptions, if any lookahead at all")]),
+    ("Back to the overview", "index.html#showcase"), ("Design Workflow", "workflow.html"))
+
+feature_page("workflow.html", "The Design Workflow", "The EDL and real sign-off chains with escalation, codes and as-builts.",
+    "Design Workflow", "The deliverables list is the backbone of design management — here it is alive: every row knows its chain, its dates, and who is sitting on it.",
+    ytone("workflow", "90 seconds of the real workflow: chains, codes, escalation, transmittals.")
+    + block("edl.webp", "The EDL — 5,300 rows, no sweat",
+          "Filter by discipline and status, import the list you already have in Excel, export the view you are looking at. Every row shows its pending step and who owes it — overdue in red, not in a report next week.",
+          ["Import maps your existing columns automatically", "Pagination proven at 5,300+ rows — capacity to 20,000", "Pending step + owner on every row"])
+    + block("wfdetail.webp", "A revision's whole life on one card",
+          "P02 went through the full chain — including the admin acting for an absent approver, recorded transparently — was issued on transmittal TRN-0141, then the consultant returned Code C. The chain reopened itself and P03 is now mid-review with a working-day due date.",
+          ["Originate → check → approve → DC → issue", "Substitutions stamped: who acted for whom", "Codes A–D; C and D reopen the chain automatically"], rev=True)
+    + block("myactions.webp", "“My actions” — each engineer's personal queue",
+          "Everything waiting on you across every deliverable, with batch approve when it is a stack and a 'While away' delegation so leave never stalls a chain.",
+          ["Batch actions up to 100 at once", "Delegation with an end date", "Automatic escalation after 2 working days"])
+    + block("c_chain.webp", "As-builts ride the same rails",
+          "AB revisions run on the same chains and the same evidence trail, without ever disturbing the issued status of the design record — coverage reported per discipline.",
+          ["AB01… labels on the same deliverable", "Issued status never regresses"], rev=True,
+          cap="A full chain, cropped from the revision card above.")
+    + caps("The full sign-off machine — built inside a mega-project's delivery, not a demo.", [
+        ("The EDL", [
+            ("Excel import with auto-mapping", "Bring the list you already keep; columns map themselves; re-import updates in place."),
+            ("Capacity", "Tested end-to-end at 5,300 rows with 14 engineers acting in parallel; engine reconciled to the row. Handles 20,000."),
+            ("View = export", "The filtered view you are looking at exports to Excel exactly as filtered."),
+            ("Planned vs actual dates", "Planned issue per row; actual stamped on issue; variance feeds the S-curve."),
+            ("Stage-weighted earned value", "Each status carries a percent — progress is earned, not guessed.")]),
+        ("Chains & steps", [
+            ("Five step kinds", "Originate, discipline check, approve, DC check, issue — per-discipline templates, editable per project."),
+            ("Template wizard", "One press creates a default sign-off chain for every discipline."),
+            ("Working-day deadlines", "Step durations count working days on YOUR weekend — deadlines never land on Friday."),
+            ("Named accountability", "Every step assigned to a person; 'anyone' steps eliminated by design.")]),
+        ("Acting on work", [
+            ("Batch actions", "Approve or return up to 100 waiting steps in one confirmation."),
+            ("Delegation", "'While away' hands your steps to a colleague until a date — every act stamped '[delegate — acted for X]'."),
+            ("Admin substitution", "An admin can unblock a chain, transparently: '[admin — acted for X]' in the trail."),
+            ("Reassignment", "Move a single step to another engineer without touching the template.")]),
+        ("The loop closed", [
+            ("Escalation engine", "Due today: nudge. Two working days over: escalate to the next in line. Every three: re-nudge. Automatic, hourly."),
+            ("Response codes A–D", "Record the consultant's code per revision; C and D reopen the chain by themselves."),
+            ("Transmittals", "Issued deliverables get transmittal records with per-project numbering."),
+            ("Auto visual compare", "Each new revision is diffed against the last — removed in red, added in teal — before reviewers open it.")]),
+        ("Document control", [
+            ("Numbering discipline", "Enforce your document-number pattern (or raw regex); filenames checked on submission."),
+            ("Title-block reading", "The sheet's title block is read and checked against the EDL row — scanned sheets included, via vision."),
+            ("As-built family", "AB01… revisions on the same deliverable; issued design status protected; coverage report per discipline."),
+            ("Full audit", "Who submitted, who acted, who was acted-for, when — permanently on the record.")])])
+    + versus("Against the field — design workflow", [
+        ("Sign-off chains with delegation, escalation and response codes", "Generic 'review status' fields; chasing lives in someone's memory"),
+        ("Working-day clocks on a Fri–Sat weekend", "Calendar-day durations, if durations exist at all"),
+        ("As-built revisions on the same record, issued status protected", "As-builts as a separate folder, disconnected from the trail"),
+        ("5,300-row EDL exercised with 14 parallel actors — reconciled", "Row limits nobody has tested against a real mega-project list")]),
+    ("Dashboard", "dashboard.html"), ("Registers & Claims", "registers.html"))
+
+feature_page("registers.html", "Registers & Claims", "One grid for every register — and a claims ledger that writes itself.",
+    "Registers &amp; Claims", "RFIs, submittals, shop drawings, risks: one consistent grid, importable from what you already have — and quietly feeding your entitlement record.",
+    ytone("registers", "The registers film: import, the approval clock, the chase pack.")
+    + block("registers.webp", "Every register, one behaviour",
+          "The same grid, filters, column manager and export everywhere. Import an existing export and the columns map themselves; the approval clock shows who is holding what, oldest first.",
+          ["Excel in, Excel/PDF out — the view is the export", "Custom columns and rules per register", "Chase pack: one press, every overdue item"])
+    + block("claims.webp", "The claims ledger — the feature the others don't have",
+          "Set the contractual review allowances once. From then on every item is measured against them, live: held-vs-allowed clocks, excess days aggregated, notice windows tracked, and a Word evidence pack on demand.",
+          ["Computed from the registers you already keep", "Notice deadlines — never miss a 28-day clause", "Monthly exhibit with dates and references"], rev=True, anchor="claims")
+    + ytone("claims", "The claims film: entitlement evidence recording itself while you work.")
+    + block("c_ledgerrow.webp", "Held vs allowed, item by item",
+          "Each row carries its own clock: the teal share is the contractual allowance, the red is the overrun. This is contemporaneous evidence kept by software instead of memory.",
+          [], cap="Cropped from the live ledger.")
+    + caps("Every register capability, and the claims engine underneath.", [
+        ("The grids", [
+            ("Seven register types", "RFIs, submittals, shop drawings, long-lead items, risks, deadlines, design issues — one consistent behaviour."),
+            ("Custom columns & rules", "Add the columns your project speaks; rules keep entries consistent."),
+            ("Column manager", "Show, hide, resize — remembered per register, per user."),
+            ("Facet filters + search-every-column", "Slice by any value; the count and the export follow the filter.")]),
+        ("In and out", [
+            ("Excel import with mapping", "Aconex-style exports map themselves; re-import updates matched rows."),
+            ("Excel / PDF export", "Ticked rows if any, else the filtered view, else everything."),
+            ("Portal downloads intake", "Files fetched from consultant portals land in an intake queue for filing."),
+            ("Supervised portal fetch", "Sign in to the portal yourself — the workspace never holds your portal password.")]),
+        ("The clock & the chase", [
+            ("Approval clock", "Who is holding what, oldest first — the meeting agenda writes itself."),
+            ("Chase pack", "One press: a dated chase list of every overdue item, ready to send."),
+            ("Analytics + custom analytics", "Built-in charts plus a builder for the analysis your PM actually asks for."),
+            ("Attention feed integration", "Overdue register items rank into the dashboard's one list.")]),
+        ("Claims & entitlement", [
+            ("Review allowances", "Contractual review periods per type, set once from the contract."),
+            ("Held-vs-allowed ledger", "Every open item measured live; excess days aggregate for the claim narrative."),
+            ("Notice tracking", "Mark the contractual notice per item; closing windows (e.g. 28 days) tracked."),
+            ("Evidence pack", "One press: the monthly Word exhibit — items, dates, references, totals."),
+            ("Review-record tie-in", "Deliverable response codes and issue→response times join the entitlement story.")])])
+    + versus("Against the field — registers & claims", [
+        ("Registers feeding an entitlement ledger automatically", "Logs that record events but never compute entitlement"),
+        ("Notice windows with deadlines tracked per item", "A diary note, if the engineer remembered"),
+        ("The filtered view IS the export", "Export screens with their own separate logic")]),
+    ("Design Workflow", "workflow.html"), ("Before the pour", "pour.html"))
+
+feature_page("pour.html", "Before the pour",
+    "Shop drawings and submittals held against the concrete pouring plan — flagged the number of days early you asked for.",
+    "Before the pour",
+    "The pouring plan is the one date on a construction site that does not move. This holds every pour against the approvals that must exist before it, and warns you while there is still time to chase.",
+    ytone("pour", "The pour film: the board, the lead you choose, the reasoning behind every match.")
+    + block("pour.webp", "The board that watches the dates that cannot slip",
+          "Import the pouring plan you already keep — or paste it out of the spreadsheet. Every pour and every watched installation activity is set against the shop drawings and material submittals that must be approved before that date. You choose how many days early you want to be told; from then on the board answers one question, every morning: what is coming, and is the paperwork ready for it.",
+          ["Import an xlsx pouring plan, or paste the rows straight in — the date column finds itself",
+           "You set the lead: flag me 7, 14, 21 days before the pour",
+           "States that mean something: ready, watching, at risk, blind — and passed, which is the one you never want to see"])
+    + block("c_pending.webp", "How it knows which drawing belongs to which pour",
+          "This is the part that is easy to get wrong and dangerous to fake. Location tokens are read from the pour and from the document by the SAME extractor — L21, B2, Zone A, Podium, Roof — so a match is a real overlap of words, not a guess. Then the kind of event decides what counts: a concrete pour needs the drawings that carry the cast obligation, while an installation needs the material submittals for the systems it names. Every row shows the reasoning that produced it, so you can disagree with it.",
+          ["One extractor reads both sides — the same token means the same thing everywhere",
+           "Cast events demand cast drawings; installation events demand the materials for the systems they name",
+           "Documents that merely touch the location are shown dimmed and honestly labelled, never counted as cover"], rev=True)
+    + block("c_attention.webp", "Your judgement outranks the matcher — and survives the next import",
+          "An engineer who links a drawing to a pour by hand is stating a fact the software cannot infer. That link is kept. Re-import the revised pouring plan next month and the human decisions ride through it untouched; only the dates and the machine matches are recomputed. The same is true of a dismissal: tell it that a pour needs nothing and it stops asking.",
+          ["Confirm or dismiss any link by hand — it is remembered against the reference, not the row number",
+           "Re-importing a revised plan never erases a person's decision",
+           "The daily check rings once per date and per missing document — never a second time for the same news"])
+    + caps("Everything the board does, plainly.", [
+        ("Getting the plan in", [
+            ("Import xlsx", "The pouring plan as your planner keeps it. Columns are found by content, not by header text, so a renamed sheet still imports."),
+            ("Paste it", "No file needed — paste rows straight from the spreadsheet."),
+            ("Merged by reference", "Re-import updates the pour that already exists rather than creating a twin."),
+            ("Watch an activity", "Any programme activity can be watched too, not only concrete — risers, ductwork, anything with a paperwork gate.")]),
+        ("What it reads", [
+            ("The deliverables list", "Shop drawings and their approval state, live."),
+            ("The registers", "Shop-drawing and submittal registers — which matters, because many projects keep the record there and nowhere else."),
+            ("Approval states, honestly ranked", "Returned outranks approved outranks in-review outranks pending — a returned drawing is not cover."),
+            ("Systems vocabulary", "Chilled water, fire fighting, drainage and the rest, so an installation event knows which submittals belong to it.")]),
+        ("What it tells you", [
+            ("Countdown per event", "The date, and the days between now and it."),
+            ("Required list with states", "Each document named, with the state it is actually in."),
+            ("Visible reasoning", "Why this document was matched to this pour — always shown, never hidden."),
+            ("At risk before it is late", "The flag fires at your chosen lead, not on the day."),
+            ("Blind, and said out loud", "A pour with nothing linked is reported as unknown rather than quietly reported as fine.")]),
+        ("Staying on it", [
+            ("A daily check", "Runs each morning by itself; the bell rings once per new gap."),
+            ("Deep link", "The notification opens this board on the event that caused it."),
+            ("Dismiss", "An event that genuinely needs nothing stops asking."),
+            ("Nothing is sent anywhere", "Like everything else here, it recommends — it never writes to your registers or your mail.")])])
+    + versus("Against the field — the pour gate", [
+        ("Approvals held against the pouring plan, flagged days early", "A document register and a programme that never speak"),
+        ("Location and trade matched by the same extractor on both sides", "A person remembering which drawing covers which slab"),
+        ("The engineer's manual link outranks the machine and survives re-import", "A matching rule you cannot correct, or a spreadsheet you must rebuild")]),
+    ("Registers & Claims", "registers.html"), ("Search & Ask", "search.html"))
+
+feature_page("search.html", "Search & Ask", "Page-cited answers from your entire archive — on your own server.",
+    "Search &amp; Ask", "The archive stops being a place where answers go to hide. Ask in plain language; get the clause, the reply, the drawing note and the calculation — each with its page.",
+    ytone("knowledge", "The knowledge-base film: indexing, asking, and the page-cited answer.")
+    + block("search.webp", "One question, four sources, three seconds",
+          "“Chilled water riser insulation thickness” returns the specification table, the consultant's refusal of the VE proposal, the drawing legend note and the condensation check — ranked, scored, page-cited.",
+          ["Meaning + keyword search with reranking", "Every hit shows document, page and heading", "‘Every mention’ sweep for exhaustive coverage"])
+    + block("c_hit.webp", "Answers you can defend",
+          "A result is only useful in engineering if you can cite it. Every passage carries its document and page — paste it into a reply to the consultant and stand behind it.",
+          [], rev=True, cap="A single hit, cropped: score, page, heading, passage.")
+    + block("library.webp", "The Library behind it",
+          "Folders you recognise, indexed status on every document, and files opening from the project, your OneDrive, your mail attachments or this computer.",
+          ["Watched folders index new arrivals automatically", "OCR for scans — English and Arabic", "Same file picker in Library and both Studios"])
+    + caps("The intelligence engine, spelled out.", [
+        ("Reading", [
+            ("Every format that matters", "PDF, Word, Excel, scanned images, drawings — read into one knowledge base."),
+            ("OCR, English + Arabic", "Old letters and stamped drawings become searchable text — the archive stops being a blind spot."),
+            ("Watched folders", "New arrivals index themselves; the knowledge base is as fresh as the last document."),
+            ("Per-project isolation", "Each project keeps its own index — switching projects switches the brain.")]),
+        ("Finding", [
+            ("Hybrid search", "Meaning-based + keyword, together, reranked — finds 'pump clearance' when the letter says 'access around the skid'."),
+            ("Every-mention sweep", "Exhaustive mode: every document that mentions a term, with true counts."),
+            ("Ask with citations", "Plain-language answers composed from the evidence, each claim cited (document, p.X)."),
+            ("Citations library", "Real answers auto-capture their citations for reuse in letters and reports."),
+            ("⌘K everywhere", "The palette searches and jumps from any page.")]),
+        ("Economics", [
+            ("Runs on your server", "Indexing and search cost nothing per use — a thousand questions a day, zero bill."),
+            ("Works offline", "The engine needs no internet; the archive answers on a site cabin generator."),
+            ("No data leaves", "Documents, index and questions stay on your hardware.")])])
+    + versus("Against the field — search", [
+        ("Ask the archive, get a page-cited answer, locally", "Filename search; AI answers only via their cloud, at extra cost"),
+        ("Arabic scans readable and searchable", "Latin OCR at best; the Arabic archive stays dark"),
+        ("Zero marginal cost per question", "Per-user AI add-ons priced monthly")]),
+    ("Before the pour", "pour.html"), ("Mail & Follow-ups", "comms.html"))
+
+feature_page("comms.html", "Mail, Calendar & Follow-ups", "Sent mail becomes tracked promises; meetings arrive pre-briefed.",
+    "Mail &amp; Follow-ups", "Connect your own account — sign-in happens at microsoft.com, the app never sees your password — and your correspondence starts working for you.",
+    block("followups.webp", "Follow-ups with a brain",
+          "Real asks are tracked automatically; meeting invitations, auto-replies and no-reply robots are filtered out. When a thread waits past its patience — counted in working days on your weekend — the bell rings and a chaser is already drafted.",
+          ["Replies detected from the inbox automatically", "Patience in working days; weekends never count", "Reopen on resend; quiet threads stay quiet"])
+    + block("calendar.webp", "Meetings arrive pre-briefed",
+          "The calendar highlights today, and any meeting can produce a prep pack: related documents, open register items on the subject, and recent correspondence — assembled deterministically, cached for the week.",
+          ["Prep pack: one press, reused all week", "Open items ranked overdue-first", "Minutes drafted from your rough notes"], rev=True)
+    + block("c_fu.webp", "Three states, zero ambiguity",
+          "Needs reminder, waiting, replied — every thread tells you its state and its clock at a glance.",
+          [], cap="Cropped from the live follow-ups list.")
+    + caps("Everything the mail brain does — and everything it deliberately never does.", [
+        ("Connection & privacy", [
+            ("Your account, your sign-in", "Per-user Microsoft sign-in via the official device-code flow — at microsoft.com, never in the app."),
+            ("Per-user encrypted tokens", "No user — and no API — can read another's mailbox. Ever."),
+            ("Reads and drafts only", "The workspace never sends mail, never edits your mailbox, calendar or notes.")]),
+        ("Follow-ups", [
+            ("Track what THEY promised you", "One press on a received e-mail puts the sender's promise on the same board, chased with the same patience — a commitment made to you is a commitment either way."),
+            ("Automatic tracking", "Every real ask you send becomes a tracked thread — invites, auto-replies and no-reply robots filtered out."),
+            ("Working-day patience", "Choose the patience (e.g. 3 working days); weekends — YOUR weekend — never count."),
+            ("Reply detection", "Replies found in the inbox automatically close the wait; a resend after a reply reopens it."),
+            ("Drafted chasers", "When patience runs out, a polite chaser is already written — you send it, or not."),
+            ("Quiet threads + reopen", "Silence a thread without losing it; every item links back to the original conversation."),
+            ("Who owes you", "Each thread names the person and the days — the chase list writes itself.")]),
+        ("Calendar & meetings", [
+            ("Today, unmistakable", "The calendar marks today so a week view never confuses you."),
+            ("Meeting prep packs", "Documents + open register items + recent mail on the subject — deterministic, cached 7 days, saved to your files."),
+            ("Minutes from notes", "Rough notes become formal minutes — attendees, decisions, actions with owners."),
+            ("Notes → actions", "Apple Notes on the server Mac surface as structured briefs — handwriting included — with each action producible in one press.")]),
+        ("Triage & reading", [
+            ("AI inbox triage", "Urgent-action / action / awaiting-others / info / noise — with a one-line reason each."),
+            ("Letters keep their numbering", "A consultant's five-point letter arrives as five numbered points, not five items all called \u201c1\u201d — the reader takes the rich body and keeps Word's own list numbers."),
+            ("The inbox brief", "A composed morning read of the mailbox: act on these, worth knowing, waiting on — each line linked to its thread."),
+            ("Attachments in place", "A message's attachments appear as chips and open right there — fetched on demand into a small self-pruning cache, never stored twice."),
+            ("The whole thread, then a summary", "Read a conversation from day one in one reader, and press once for a streamed summary of what has been agreed, refused and left open."),
+            ("Handwritten notes, read back", "Apple Notes handwriting is transcribed on the server and comes back as a numbered brief — each point extractable into an action the workspace produces."),
+            ("Draft replies", "A reply drafted with project facts searched from the knowledge base — never sent by the app."),
+            ("Mail into the record", "Ingested correspondence lands in the knowledge base folder, searchable like everything else.")])])
+    + versus("Against the field — correspondence", [
+        ("Sent mail becomes tracked, chased, working-day-clocked promises", "Mail lives in Outlook; the follow-up lives in memory"),
+        ("Meeting prep assembled from mail + registers + documents", "You assemble it yourself, meeting by meeting"),
+        ("Drafts only — the app never sends", "Automation products that send on your behalf and get you in trouble")]),
+    ("Search & Ask", "search.html"), ("Studios", "studios.html"))
+
+feature_page("studios.html", "The Studios", "PDF markup, CAD opening and revision compare — all in the browser.",
+    "Studios", "Drawings are where engineering actually happens. The Studios bring markup, CAD and comparison into the same workspace as everything else — no desktop licences, no exports.",
+    block("pdfstudio.webp", "A design review, exactly as it happens",
+          "This is the PDF Studio mid-review: a revision cloud around the pumps whose plinths must move, callouts tied to the open RFIs, and a FOR REVIEW stamp — all on the live sheet, listed in the markups rail, saved into the project record.",
+          ["Clouds, callouts, arrows, stamps, text, measurements and counts", "Every markup listed, filterable and jumpable in the rail", "Find-in-document searches the sheet's own text"])
+    + block("c_markup.webp", "Markup that reads like engineering",
+          "Comments carry their references — “Relocate CHWP-01/02 plinths 200 mm east — access clearance per RFI-0492” — so the drawing conversation and the register stay one story.",
+          ["Exports look exactly as drawn — clouds and all", "Photos can pin to a location on the sheet"], rev=True,
+          cap="The sheet up close: revision cloud, leader callouts, the stamp.")
+    + block("library.webp", "Open from anywhere",
+          "Both studios share the workspace's file browsing: the project library, your OneDrive, your mail attachments, or a file from this computer. CAD Studio opens DWG/DXF directly in the browser.",
+          ["Same file picker in Library and both Studios", "DWG/DXF open without AutoCAD", "Everything saved back into the project record"])
+    + block("c_pending.webp", "Compare two revisions, see every change",
+          "The compare engine overlays two revisions and paints the differences — removed in red, added in teal — and runs automatically when a new revision is submitted on a workflow.",
+          ["Automatic on workflow submissions", "Manual compare for any two PDFs", "Result filed to outputs + linked to the deliverable"], rev=True,
+          cap="EDL rows with pending steps — the compare launches from a revision card.")
+    + caps("Every markup and drawing capability, named.", [
+        ("Markup tools", [
+            ("Shapes", "Rectangle, ellipse, cloud (real revision clouds), line, arrow, polyline, polygon, freehand ink, highlight."),
+            ("Words on the sheet", "Text boxes, leader callouts, sticky notes — with font size and colour control."),
+            ("Stamps", "APPROVED, REJECTED, REVISED, FOR REVIEW, AS-BUILT, VOID — placed and scaled like any markup."),
+            ("Apple Pencil on the iPad", "The Pencil draws, a finger still pans and pinches, and the heel of your hand is ignored — so a sheet can be marked up on the tablet you already carry round the site. Pressure changes the weight of the stroke."),
+            ("Photo pins", "Attach a photo to a location on the sheet — site condition, meet the drawing."),
+            ("Colour discipline", "Six-colour palette so each reviewer or topic keeps its own colour.")]),
+        ("Measure & count", [
+            ("Calibrated measurement", "Draw a known length once — every measurement after that is in real units."),
+            ("Areas", "Polygon areas with the value written on the region."),
+            ("Counts", "Numbered count sequences per colour — sprinkler heads, sockets, fixtures — totals kept per sheet.")]),
+        ("Working the document", [
+            ("Find in document", "Search the sheet's own text; hits highlighted in place."),
+            ("Markups rail", "Every annotation listed, clickable, filterable — the review summary writes itself."),
+            ("Forms & links", "PDF form fields and page links respected."),
+            ("AI reads the sheet", "The vision rail reads title blocks, legends and scanned content on demand."),
+            ("Tabs + deep links", "Several documents open at once; a URL opens a specific document and page."),
+            ("Exact export", "The exported PDF looks exactly like the screen — clouds, callouts, stamps flattened in place.")]),
+        ("CAD & compare", [
+            ("DWG/DXF in the browser", "CAD Studio opens native CAD files without AutoCAD on the machine."),
+            ("Automatic conversion", "Server-side DWG→DXF conversion picks its own path (no GUI tools needed)."),
+            ("Revision compare", "Two PDFs overlaid: removed in red, added in teal, common in grey — auto-run on workflow submissions."),
+            ("Filed results", "Compare outputs saved as PDFs into the project's outputs, linked to the deliverable.")])])
+    + versus("Against the field — drawings", [
+        ("Markup + registers + mail + workflow on ONE record", "Superb markup — in an island; the RFI lives somewhere else"),
+        ("Browser-based; nothing to install, nothing per seat", "Desktop installs, per-seat licences, version drift"),
+        ("Compare runs itself on every submission", "Manual overlay when someone remembers")]),
+    ("Mail & Follow-ups", "comms.html"), ("Calculators", "calculators.html"))
+
+# ---- calculators page: grouped list generated from the REAL manifest ----
+import json as _json
+_man = _json.load(open(ROOT / "calc_manifest.json"))["calcs"]
+_groups_order = ["Hydraulics", "HVAC", "Electrical", "Plumbing", "Fire", "Drainage",
+                 "Process", "Structural", "Vertical transport", "Project controls", "Utilities"]
+_calc_groups = []
+for g in _groups_order:
+    items = [(c["label"], ", ".join(p["label"] for p in c["params"][:4])
+              + ("…" if len(c["params"]) > 4 else ""))
+             for c in _man if c["group"] == g]
+    if items:
+        _calc_groups.append((f"{g} · {len(items)}", items))
+
+feature_page("calculators.html", "The Calculators", "43 verified engineering calculators — formulas shown, assumptions stated.",
+    "Calculators", "The calculations engineers redo in scratch spreadsheets every week — pumps, ducts, cables, storage, traffic — live in the workspace, each showing the formula it used and the assumptions it made.",
+    ytone("daily", "The small-tools film: calculators, notes and the daily carry.")
+    + block("calculators.webp", "A calculation you can defend",
+          "Pump power at 250 m³/h and 38 m: hydraulic 25.89 kW, shaft 33.19 kW, suggested motor 37 kW — with the formula printed under the result and the engineering note that matters. Copy the result, or let the Assistant use it inside a report.",
+          ["Formula printed with every result", "Assumptions and defaults visible, editable", "Copy as text, or use directly in AI-written documents"])
+    + block("c_calcresult.webp", "Results, not just numbers",
+          "Suggested motor ratings, warnings when a value crosses a limit, gauges against thresholds — the calculators answer the next question, not just the arithmetic.",
+          ["Limit checks colour the verdict", "Favourites and recent calculators one click away"], rev=True,
+          cap="The result card: values, formula, engineering note.")
+    + caps("All thirty-five, by discipline — with their main inputs.", _calc_groups)
+    + versus("Against the field — calculations", [
+        ("43 verified calculators inside the project workspace", "A folder of personal spreadsheets nobody dares audit"),
+        ("Formula and assumptions printed with the result", "A cell with =0.746*B4/0.7 and a prayer"),
+        ("The Assistant uses the same calculators in written deliverables", "Numbers retyped from Excel into Word, drifting")]),
+    ("Studios", "studios.html"), ("Assistant & AI", "assistant.html"))
+
+feature_page("assistant.html", "The Assistant & AI accounts", "A project-grounded assistant — with AI billing that is honest by design.",
+    "Assistant &amp; AI", "The assistant searches your indexed evidence, calculates with verified formulas and writes Word/PDF deliverables on your own letterhead — and it never invents what it cannot cite.",
+    block("assistant.webp", "Grounded, cited, useful",
+          "Ask for a letter about delayed approvals and it searches the registers, quotes the record and produces the Word file — on your company template if you name one. Every claim traces to a document and page.",
+          ["Writes docx/PDF deliverables on your template", "Cites (document, p.X) — or says ⟨TBC⟩", "Sub-agents research and check before it reports"])
+    + block("aiaccount.webp", "Your AI account — honest by design",
+          "AI tasks are badged in the interface and run on an AI account: each user connects their own, so usage bills to them — never silently to the workspace owner. Without one, AI tasks show a friendly connect card and every local feature keeps working.",
+          ["Per-user keys, encrypted at rest", "The owner chooses if the workspace AI is shared", "Local features never need an AI account"], rev=True)
+    + block("help.webp", "It teaches itself",
+          "A one-minute guided tour on first sign-in, a full manual with a what's-new digest, exact how-to hints on every settings card, and a living demo project to practise on.",
+          ["Role-aware tour, replayable from Help", "Manual written per role", "Demo Tower: the safe classroom"])
+    + caps("What the assistant can actually do — tool by tool.", [
+        ("Evidence", [
+            ("Search & sweep", "Hybrid search plus exhaustive every-mention sweeps across the indexed project."),
+            ("Read any document", "Opens the indexed text of a document, page by page."),
+            ("Look at the sheet", "Renders a drawing page and READS it — scanned title blocks, legends, symbols — never guesses."),
+            ("Lift printed tables", "Copies a real grid off a PDF page cell by cell — no retyping, no drifted numbers."),
+            ("Verify the quote", "Every clause that carries weight is checked verbatim against the source before it is written.")]),
+        ("Production", [
+            ("Word/PDF deliverables", "Reports, letters, summaries — produced as files, not pasted text."),
+            ("Your letterhead kept", "Name a template and it writes INSIDE it — cover page, headers, footers, page numbers, contents field preserved."),
+            ("Spreadsheets", "Anything you will sort or total is produced as a real spreadsheet."),
+            ("Calculators in documents", "The same 43 verified calculators, used mid-document with the formula cited."),
+            ("Live project record", "Reads registers, workflows and status directly — status comes from the record, never from an old PDF.")]),
+        ("Discipline", [
+            ("Researcher + checker sub-agents", "Wide evidence-gathering, then an adversarial check that tries to prove the draft wrong before you see it."),
+            ("Never invents", "No source, no claim — it writes ⟨TBC⟩ and says what to check."),
+            ("Asks when ambiguous", "Which template, which revision, which project — it asks instead of guessing."),
+            ("Attachments & threads", "Drop files into the conversation; every thread kept, searchable, resumable."),
+            ("Personal memory (opt-in)", "Preferences you choose to save shape future answers — per user.")]),
+        ("The AI accounts model", [
+            ("Per-user keys", "Each person connects their own AI account; usage bills to them, encrypted at rest."),
+            ("Owner's sharing policy", "Workspace AI shared with: owner only / admins / everyone — an explicit setting."),
+            ("Badged AI tasks", "Every AI feature carries an AI badge; no AI account means a friendly connect card, never an error."),
+            ("Local vs AI, honest", "Search, registers, workflows, studios and calculators never need an AI account at all.")])])
+    + versus("Against the field — AI", [
+        ("AI grounded in YOUR archive, answering with page citations, locally", "Generic AI bolted on their cloud — your documents leave home"),
+        ("Writes inside your own letterhead template", "Exports that lose the cover page and the footer every time"),
+        ("Per-user AI billing, badge-labelled, optional", "Platform-wide AI fees whether you use them or not")]),
+    ("Calculators", "calculators.html"), ("Platform & administration", "platform.html"))
+
+feature_page("platform.html", "Platform & Administration", "Everything around the pillars: programme, variations, reviews, security, growth.",
+    "Platform", "The rest of the workspace — the pages that make it an operating system for the engineering office rather than a set of tools.",
+    ytone("site", "The on-site film: speak a snag, and the paper meets the wall.")
+    + block("tour.webp", "An operating system, not an app bundle",
+          "Multi-project workspaces, roles that mean something, automations that sweep hourly, an audit trail that remembers — and an onboarding tour so nobody needs a training course.",
+          ["Every pillar shares one project record", "Hourly automations chase so people don't have to", "The guided tour teaches each role its own app"])
+    + ytone("headoffice", "The head-office film: across projects, and the client portal your company controls.")
+    + block("aiaccount.webp", "Administration without a consultant",
+          "Settings are organised into plain sections with a getting-started checklist, exact how-to hints on every card, and growth tools — demo project, value report, security one-pager — built in.",
+          ["Getting-started checklist walks the workspace to ready", "Every settings card carries exact click-paths", "Demo project + trial pinning for safe prospect demos"], rev=True)
+    + caps("The rest of the platform, page by page.", [
+        ("More pillars", [
+            ("Programme", "The Primavera P6 programme imported and viewed beside delivery — plan and record in one place, with a three-week look-ahead and the critical path."),
+            ("Before the pour", "The concrete pouring plan held against the shop drawings and submittals that must be approved before each date, flagged the days early you choose. <a href='pour.html' style='color:var(--teal)'>The whole board &rarr;</a>"),
+            ("Handover dossier", "Closeout obligations counted from the specification clauses themselves and set against what is actually filed — long before the month the building is due."),
+            ("Scope & Variations", "A variation register plus a commercial radar that screens consultant comments for hidden entitlement."),
+            ("Reviews", "AI document review against the specifications — comment drafts with citations, an engineer approves."),
+            ("On site", "Speak a snag and it files itself as the right record; site photos checked against the approved submittal, not a generic checklist."),
+            ("Before you send", "The outbound gate: every draft checked against the clauses it relies on before it leaves."),
+            ("Compare", "Any two document revisions overlaid — removed in red, added in teal — beyond the automatic workflow compares."),
+            ("Across projects", "The head-office view over every workspace project: turnaround, return reasons, repeat conflicts."),
+            ("My Notes", "A personal notes board, per user, next to the work."),
+            ("History & Jobs", "Every background job visible with progress; every action in the audit trail.")]),
+        ("Workspace", [
+            ("Multi-project", "Each project keeps its own knowledge base, index, registers and workflows; switching re-points everything."),
+            ("Project archive", "Retire a project to a dated archive folder — documents, index and a database export — restorable."),
+            ("Notifications centre", "Every completion, arrival and escalation — in-app, and to your phone if you enable push."),
+            ("Client portal, company-controlled", "A client sign-in reaches one read-only progress page and nothing else — and YOUR company decides exactly what it shows: every section, the plan comparison, individual disciplines, the transmittal count, even the welcome note. A figure you switch off is never sent, not merely hidden."),
+            ("Arabic-ready", "The interface ships with an Arabic RTL option; the engine reads Arabic documents natively.")]),
+        ("Trust", [
+            ("Sign-in always", "No anonymous access; rate-limited logins; two-factor enforced for administrators."),
+            ("Project-pinned accounts", "Trial and demo users locked to one project — your live projects do not exist for them."),
+            ("Roles enforced at the server, not the screen", "Five roles — owner, admin, engineer, management, client. What a role may not see is never sent to their browser at all, so a typed address reveals nothing. Audited by signing in as each one and looking."),
+            ("The owner's own machine stays the owner's", "Mail, calendar and notes read from the computer the workspace runs on belong to the owner alone · not to the admin role. An administrator can run the whole company here and never see them."),
+            ("Encrypted per-user secrets", "Mail sign-ins and AI keys encrypted at rest, per person."),
+            ("Signed updates", "Update packages must carry a valid signature to install."),
+            ("Backups", "Scheduled local backups plus an encrypted nightly cloud backup of the app record."),
+            ("Audit trail", "Logins, changes, approvals, substitutions, escalations — permanent and searchable.")]),
+        ("Connections", [
+            ("Outlook / Microsoft 365", "Per-user sign-in for mail, calendar and OneDrive — tokens encrypted per user."),
+            ("Autodesk Construction Cloud", "Each user signs in to their OWN ACC account on Autodesk's site; the workspace never holds anyone's Autodesk password."),
+            ("Portals", "Supervised fetch from consultant portals; downloads land in an intake queue."),
+            ("Feeds", "Token-secured calendar and BI feeds for the tools your office already uses."),
+            ("MCP both ways", "Your AI agents can plug INTO the workspace, and the workspace can call external agent tools — the AI layer multiplies."),
+            ("Automations", "Hourly sweeps (follow-ups, escalations) and a weekly digest — visible, adjustable, off-switchable.")])])
+    + versus("Against the field — the platform", [
+        ("One integrated record on hardware you own, one workspace price", "Two or three subscriptions, per seat per month, forever"),
+        ("Fri–Sat weekends, Arabic documents, GCC reality built in", "Localisation as an afterthought"),
+        ("Teaches itself: tour + manual + demo project", "Admin certification courses and consultants")]),
+    ("Assistant & AI", "assistant.html"), ("Proven in delivery", "proven.html"))
+
+
+# ---------------- the outbound check (deep-dive, no screenshots by design) ----
+gate = page_head(
+    "Before you send — Engineering Workspace",
+    "The outbound check: retrieves the clauses your draft relies on, reads the whole section, and finds what would get it rejected before it leaves.")
+gate += """
+<header class="phero"><div class="wrap">
+  <div class="crumb"><a href="index.html">Engineering Workspace</a> / Before you send</div>
+  <div class="eyebrow">In depth</div>
+  <h1>Before you send</h1>
+  <p class="sub" style="margin-top:16px">Document review normally reads what ARRIVES. This reads what
+  is about to LEAVE. The asymmetry is the whole point: by the time a request has gone out, the cost
+  of the mistake inside it is already fixed.</p>
+</div></header>
+<div class="wrap">
+
+  __GATE_FILM__
+
+  <div class="block"><div class="split">
+    <div>
+      <h2 style="font-size:24px">Two speeds, deliberately</h2>
+      <p class="sub" style="font-size:14.5px">The instant pass runs on the wording alone. It costs
+      nothing, returns in a second, and is safe to run while somebody is still typing. The full check
+      spends real effort: it goes and retrieves the specification sections the draft leans on and
+      reads them whole, which is the only way to catch a contradiction nobody remembered.</p>
+      <div class="checks">
+        <div>Instant: editions, absolute claims, undeclared compliance, self-contradicting limits, missing response dates</div>
+        <div>Full: the governing sections retrieved and read end to end, with the contradicting clause quoted</div>
+        <div>Half an answer always beats a spinner — instant findings survive if the full pass fails</div>
+      </div>
+    </div>
+    <div>
+      <div class="caps">
+        <div class="cap"><b>One overstated compliance claim</b><span>and the reviewer reads everything else you wrote with suspicion.</span></div>
+        <div class="cap"><b>One deviation you did not declare</b><span>and it comes back, and it is remembered next time.</span></div>
+        <div class="cap"><b>One edition the contract does not bind</b><span>and the rejection is a technicality that still costs a full cycle.</span></div>
+        <div class="cap"><b>No required response date</b><span>and the answer arrives whenever it happens to suit.</span></div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="block"><div class="split rev">
+    <div>
+      <div class="caps">
+        <div class="cap"><b>Editions</b><span>Which edition of each code the contract binds, which edition is actually on the shelf, and where the two disagree.</span></div>
+        <div class="cap"><b>Conflicts</b><span>Two requirements about the same component that cannot both be satisfied — a US listing here, a British standard there.</span></div>
+        <div class="cap"><b>Acceptable makers</b><span>Every clause that already names manufacturers, with what their products must satisfy. Arguments you already own.</span></div>
+        <div class="cap"><b>Authority file</b><span>What the contract requires of the code authority, what has been issued for its review, and what is missing.</span></div>
+      </div>
+    </div>
+    <div>
+      <h2 style="font-size:24px">The specification, read against itself</h2>
+      <p class="sub" style="font-size:14.5px">These run once per specification revision rather than
+      once per question, and they are the reason the check can be specific. A conflict found at
+      tender is a priced qualification. The same conflict found at procurement is a delay and an
+      argument. And a clause that already names your manufacturer as acceptable is the strongest
+      sentence your letter can carry — most of them are never used, because nobody knows the clause
+      is there.</p>
+      <div class="checks">
+        <div>Deterministic where it can be: an answer always traces to the sentence it came from</div>
+        <div>Runs on your own server — no per-question cost, nothing leaves</div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="block"><div class="split">
+    <div>
+      <h2 style="font-size:24px">What the change obliges elsewhere</h2>
+      <p class="sub" style="font-size:14.5px">Substitutions are never local. Change one fitting's
+      thread and you have quietly obliged new couplings, nozzles, reducers, caps and the fire
+      authority's inlets — none of which appears in the request that started it. Mixed threads in a
+      tower is a hazard discovered at commissioning, which is the worst possible moment to discover
+      anything. The workspace walks the dependency and lists what else the change touches: other
+      components, approved submittals, procured items, drawings, other trades.</p>
+    </div>
+    <div>
+      <h2 style="font-size:24px">And what the Engineer already said</h2>
+      <p class="sub" style="font-size:14.5px">A project carries years of clarifications, each with a
+      written response from the party who will answer the next one. That is institutional memory
+      sitting as files, findable only by whoever was there at the time. The workspace turns it into
+      an answer: this has been ruled on, here is the ruling, here is how it was reasoned — and it
+      predicts the likely reply from what this Engineer actually wrote, not from a generic model of
+      consultants.</p>
+      <div class="checks">
+        <div>A response from your own side is labelled as such, never passed off as authority</div>
+        <div>Survives staff turnover — the value compounds the longer a project runs</div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="block">
+    <div class="capshead"><div class="eyebrow">The other half</div>
+    <h2 style="font-size:24px">And it proves you were right.</h2>
+    <p class="sub" style="font-size:14px">Everything above stops a mistake leaving. The record is
+    what protects you when the answer is slow.</p></div>
+    <div class="caps">
+      <div class="cap"><b>The response record</b><span>How long this project actually takes to answer, measured from clarifications carrying both dates — median, ninetieth percentile and worst. A number measured from the project beats a period quoted from the conditions.</span></div>
+      <div class="cap"><b>The evidence chain</b><span>For any one reference: issued, allowed, answered or not, and what it consumed. The exhibit itself, not a paragraph claiming one exists.</span></div>
+      <div class="cap"><b>Notices on record</b><span>Which entitlements were noticed and when — the part people forget until it matters.</span></div>
+      <div class="cap"><b>The handover dossier</b><span>Closeout obligations counted from the specification clauses themselves and set against what is actually filed, long before the month the building is due.</span></div>
+      <div class="cap"><b>Bilingual output</b><span>The same document in Arabic and English block for block, with clause numbers, standard references and quoted contract text left in English — what a regional reviewer actually wants.</span></div>
+      <div class="cap"><b>Cited history</b><span>Every answer the workspace gave, with the pages it came from. Your defensible trail.</span></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="capshead"><div class="eyebrow">And beyond the paper</div>
+    <h2 style="font-size:24px">The building, and the company.</h2>
+    <p class="sub" style="font-size:14px">Two places the same evidence goes further: out to the
+    site, and up to the head office.</p></div>
+    <div class="caps">
+      <div class="cap"><b>Is this what was approved?</b><span>Photograph an installed nameplate and it is read against the approved submittal for that component — the manufacturer, the model, the listings. Not a checklist asking whether it looks neat.</span></div>
+      <div class="cap"><b>Honest about a photograph</b><span>It reports that a listing mark is not visible in the image. It never claims an item is unlisted, and an unreadable photo produces one finding about the photo.</span></div>
+      <div class="cap"><b>Say it once</b><span>Speak a snag while walking and it becomes the right record — defect to the issues register, question to an RFI — with the references you said and the sheet you had open. The listening runs on the phone, so it costs nothing.</span></div>
+      <div class="cap"><b>Across every job</b><span>Which consultant actually answers, which return reason repeats on four projects, and which specification conflict is already sitting in the next tender document.</span></div>
+    </div>
+  </div>
+
+  <div class="block" id="break">
+    <div class="eyebrow">The test we invite</div>
+    <h2 style="font-size:24px">Do not trust the demo. Try to break it.</h2>
+    <p class="sub" style="font-size:14.5px">A polished demo proves nothing. The honest test of a
+    document engine is a trick question, asked on a real specification. Bring a sanitized project
+    to your trial and put these three traps in front of it:</p>
+    <div class="vals" style="margin-top:26px">
+      <div class="val reveal"><div class="num">01</div><h3>The conflicting clause</h3>
+        <p>Ask about a requirement where two clauses of the same specification disagree. A keyword tool returns the sentence that agrees with you. The check is built to read the section whole and surface the one that does not.</p></div>
+      <div class="val reveal"><div class="num">02</div><h3>The wrong edition</h3>
+        <p>Cite a section number from a code edition your contract does not bind. The editions register exists exactly for this: the rejection that looks like a technicality, caught before it costs a full cycle.</p></div>
+      <div class="val reveal"><div class="num">03</div><h3>The ruling that changed everything</h3>
+        <p>Ask a question whose answer a previous Engineer response quietly reversed. The precedent search answers from your own correspondence, with the letter and the date.</p></div>
+    </div>
+    <p style="font-size:12.5px;color:var(--ink3);margin-top:18px">If it misses one, tell us exactly
+    what it missed. That report is worth more to us than a compliment, and it is how the engine
+    got this far.</p>
+  </div>
+
+  <div class="ctaband reveal">
+    <div style="flex:1;min-width:260px"><h3>Hand it one of your own requests.</h3>
+    <div style="font-size:13px;color:var(--ink2);margin-top:4px">That is the whole demonstration. A real account inside a realistic demo project, in one minute.</div></div>
+    <a class="btn btn-primary" href="index.html#try">Try the live app &#8594;</a>
+  </div>
+  <div class="pn"><a href="index.html">&#8592; Back to the overview</a><a href="dashboard.html">Dashboard &#8594;</a></div>
+</div>"""
+gate = gate.replace("__GATE_FILM__",
+                    ytone("gate", "The outbound-check film: a draft read against its own sources."))
+write_page("gate.html", gate + FOOT, priority="0.9", changefreq="weekly")
+
+
+# ---------------- proof page ----------------
+proven = page_head(
+    "Proven on a live mega-project — Engineering Workspace",
+    "Not a prototype: built inside the delivery of a live mega-project and used every working day by the team delivering it.")
+proven += f"""
+<header class="phero"><div class="wrap">
+  <div class="crumb"><a href="index.html">Engineering Workspace</a> / Proven in delivery</div>
+  <div class="eyebrow">Built in delivery, not in a demo lab</div>
+  <h1>It was proven before it was sold.</h1>
+  <p class="sub" style="margin-top:16px">Engineering Workspace was not designed as a product and then
+  looked for a project. It was written inside the delivery of a live mega-project by the engineer
+  running that delivery, on the days the problems appeared — and it has carried that project's
+  documents, workflows and correspondence every working day since.</p>
+</div></header>
+<div class="wrap">
+  <div class="pnums">
+    <div class="pnum reveal"><div class="v">72,000+</div><div class="l">Documents indexed</div>
+      <div class="s">Contracts, specifications, drawings, submittals, letters and reports — one live project's archive, searchable to the page.</div></div>
+    <div class="pnum reveal"><div class="v">5,300+</div><div class="l">Sign-offs carried</div>
+      <div class="s">Deliverable rows moved through real approval chains — originate, discipline check, approve, DC check, issue.</div></div>
+    <div class="pnum reveal"><div class="v">14</div><div class="l">Engineers in parallel</div>
+      <div class="s">Working the same registers and the same chains at once, reconciled without a single lost revision.</div></div>
+    <div class="pnum reveal"><div class="v">EN + AR</div><div class="l">Both languages, scanned</div>
+      <div class="s">Stamped drawings and scanned Arabic letters read by OCR and searched alongside native text.</div></div>
+  </div>
+
+  {ytone("ownit", "The ownership film: your server, your record, your data staying home.")}
+
+  <div class="block" id="measured">
+    <div class="eyebrow">No mystery numbers</div>
+    <h2 style="font-size:24px">How each figure was measured.</h2>
+    <p class="sub" style="font-size:14.5px">Every number on this site is a reading from one live
+    workspace, not a projection. Here is exactly where each one comes from, so you can ask us to
+    show you the same reading live.</p>
+    <div class="caps" style="margin-top:26px">
+      <div class="cap"><b>72,000+ documents indexed</b><span>The document count of the project knowledge base, read from the workspace's own index health panel. It includes specifications, drawings, correspondence and scanned letters, English and Arabic, OCRed and searchable to the page.</span></div>
+      <div class="cap"><b>5,300+ sign-offs carried</b><span>The count of deliverable revisions moved through originate, check, approve, document control and issue chains on the live engineering deliverables list, read from the workflow record.</span></div>
+      <div class="cap"><b>14 engineers in parallel</b><span>Distinct user accounts acting on the same registers and chains inside the same working weeks, read from the audit trail.</span></div>
+      <div class="cap"><b>43 calculators</b><span>Count them on the calculators page; each carries its formula and assumptions.</span></div>
+    </div>
+    <p style="font-size:12.5px;color:var(--ink3);margin-top:18px">These are first-party readings
+    from a confidential project record, so the record itself is not public. On a serious
+    evaluation we will happily show the readings live on a screen share, or under NDA.</p>
+  </div>
+
+  <div class="block"><div class="split">
+    <div>
+      <h2 style="font-size:24px">Every feature has a scar behind it</h2>
+      <p class="sub" style="font-size:14.5px">The follow-up engine exists because replies went missing.
+      The claims ledger exists because entitlement had to be reconstructed from twelve folders at the
+      worst possible moment. The scope screen exists because a consultant comment quietly added work
+      that nobody registered. Nothing in this workspace was invented to fill a feature grid — each part
+      was written the week its absence cost something real.</p>
+      <div class="checks">
+        <div>Written by a practising MEP manager, on a live delivery — not by a team who read about one</div>
+        <div>Every workflow shape in the product is a shape that had to survive an actual submission</div>
+        <div>The capacities quoted here are measured on that project, not extrapolated from a benchmark</div>
+      </div>
+    </div>
+    <div><div class="shot reveal"><img src="img/edl.webp" alt="The deliverables list in daily use"></div>
+      <div class="shotcap">The deliverable list that carried the sign-offs — day after day.</div></div>
+  </div></div>
+
+  <div class="plog">
+    <div class="row"><div class="when">The archive</div><div class="what">
+      <b>Ask a 72,000-document archive and get the page</b>
+      <span>Indexing, OCR and retrieval tuned against a real mixed archive — native PDFs, scanned
+      transmittals, stamped drawing sheets, Arabic correspondence. Answers cite the document, the
+      revision and the page, so an engineer can check the source in one click rather than trust a summary.</span></div></div>
+    <div class="row"><div class="when">The chains</div><div class="what">
+      <b>Approval workflows that survived audit</b>
+      <span>Named steps, named owners, working-day clocks and a full revision history per deliverable —
+      including who acted for whom, and when. Reconstructing "what happened on P02" takes seconds,
+      because the record was written as the work happened.</span></div></div>
+    <div class="row"><div class="when">The correspondence</div><div class="what">
+      <b>Nothing waits in silence</b>
+      <span>Incoming mail tracked to the project, follow-ups chased on their own clocks, escalations
+      raised before a reply becomes a delay event. The chase list is generated, not remembered.</span></div></div>
+    <div class="row"><div class="when">The evidence</div><div class="what">
+      <b>Claims built from the record you already keep</b>
+      <span>Held-versus-allowed clocks, notice windows and excess days come out of the registers
+      themselves — every exhibit carrying its document references, dates and page citations.</span></div></div>
+    <div class="row"><div class="when">The hardware</div><div class="what">
+      <b>It ran on infrastructure the project owned</b>
+      <span>The whole workspace — index, documents, workflows, AI routing — running on hardware inside
+      the team's own control, reachable securely from anywhere, with nothing sitting in someone else's
+      multi-tenant cloud.</span></div></div>
+  </div>
+
+  <p class="sub" style="margin-top:34px;font-size:13px;color:var(--ink3)">
+  Project names, employers, consultants and document numbers are withheld and every screenshot on
+  this site uses a fictional demonstration project. Client confidentiality is not negotiable — the
+  same discipline applies to your data when you run the workspace.</p>
+
+  <div class="ctaband reveal">
+    <div style="flex:1;min-width:260px"><h3>Prove it on your own project.</h3>
+    <div style="font-size:13px;color:var(--ink2);margin-top:4px">Fifteen days, the full product, inside a realistic demo project.</div></div>
+    <a class="btn btn-primary" href="index.html#try">Try the live app →</a>
+  </div>
+  <div class="pn"><a href="platform.html">← Platform &amp; Administration</a><a href="index.html">Back to the overview →</a></div>
+</div>"""
+write_page("proven.html", proven + FOOT, priority="0.8")
+
+
+# ---------------- the trust pages (r141.2) ----------------
+about = page_head(
+    "About — EngSpace · Engineering Workspace",
+    "Who builds Engineering Workspace, why it exists, and where it is going.")
+about += f"""
+<header class="phero"><div class="wrap">
+  <div class="crumb"><a href="index.html">Engineering Workspace</a> / About</div>
+  <div class="eyebrow">Who builds it</div>
+  <h1>Built by the engineer who needed it.</h1>
+  <p class="sub" style="margin-top:16px">EngSpace is founder-built software. That is not a stage we
+  hide; it is the reason the product works the way it does.</p>
+</div></header>
+<div class="wrap">
+
+  <div class="block"><div class="split">
+    <div>
+      <h2 style="font-size:24px">The short story</h2>
+      <p class="sub" style="font-size:14.5px">Engineering Workspace was written by
+      <b>Mohamed Abokhatwa</b>, a mechanical and design manager with more than two decades of
+      delivery on major projects in Saudi Arabia — water infrastructure, seawater RO, pump
+      stations, pipelines and building MEP. It was not designed in a lab and then pointed at
+      construction: it was written inside the delivery of a live mega-project, by the engineer
+      running that delivery, on the days the problems appeared.</p>
+      <p class="sub" style="font-size:14.5px;margin-top:12px">The follow-up engine exists because
+      replies went missing. The claims ledger exists because entitlement once had to be
+      reconstructed from twelve folders at the worst possible moment. The outbound check exists
+      because the most expensive mistakes are the ones that leave the office looking confident.
+      Every feature has a scar behind it — <a href="proven.html" style="color:var(--teal)">the
+      proof page</a> tells that story with numbers.</p>
+    </div>
+    <div>
+      <div class="caps">
+        <div class="cap"><b>Owner</b><span>Mohamed Abokhatwa · Saudi Arabia. The software, interface and intelligence engine are proprietary.</span></div>
+        <div class="cap"><b>The product</b><span>EngSpace · Engineering Workspace — engspace.app. The live application runs at app.engspace.app on the operating company's own infrastructure.</span></div>
+        <div class="cap"><b>Engineering background</b><span>22+ years across design management, SWRO and water infrastructure, pump stations and MEP — the same work the product serves. More at <a href="https://abokhatwa.com" target="_blank" rel="noopener" style="color:var(--teal)">abokhatwa.com</a>.</span></div>
+        <div class="cap"><b>Contact</b><span><a href="mailto:{EMAIL}" style="color:var(--teal)">{EMAIL}</a> — you reach the person who builds the product, not a queue.</span></div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="block"><div class="split rev">
+    <div>
+      <div class="caps">
+        <div class="cap"><b>Changes ship in days</b><span>A trial user's report goes to the person who can fix it, and fixes ship in the next update, signed.</span></div>
+        <div class="cap"><b>No feature theatre</b><span>Nothing on this site is a mock-up. Every screenshot and film is the working product on the living demo project.</span></div>
+        <div class="cap"><b>Honest limits</b><span>The AI cites its page or writes TBC. The numbers page says exactly how each figure was measured. We would rather lose a sale than overclaim.</span></div>
+      </div>
+    </div>
+    <div>
+      <h2 style="font-size:24px">Why founder-led is a feature here</h2>
+      <p class="sub" style="font-size:14.5px">Big platforms answer to a roadmap. This product
+      answers to the work. When you evaluate EngSpace you talk directly to the engineer who wrote
+      it, who has sat on your side of the table with a consultant response overdue and a claim to
+      evidence.</p>
+      <p class="sub" style="font-size:14.5px;margin-top:12px">And where it is going: as the
+      product grows into its company, the roadmap is public and simple — a registered commercial
+      entity, an independent security assessment before the first multi-company rollout, and
+      published customer stories as trials convert. Until then, everything above is signed with a
+      name, not a brand.</p>
+    </div>
+  </div></div>
+
+  <div class="ctaband reveal">
+    <div style="flex:1;min-width:260px"><h3>Judge the product, not the story.</h3>
+    <div style="font-size:13px;color:var(--ink2);margin-top:4px">Fifteen days, the full product, a realistic demo project — and three trick questions we invite you to ask.</div></div>
+    <a class="btn btn-primary" href="index.html#try">Try the live app →</a>
+  </div>
+  <div class="pn"><a href="index.html">← Back to the overview</a><a href="security.html">Security →</a></div>
+</div>"""
+write_page("about.html", about + FOOT, priority="0.8")
+
+
+# ---------------- r150 · pricing page ----------------
+pricing = page_head(
+    "Pricing · Engineering Workspace — $39 a month for one engineer, an annual licence for a company",
+    "One engineer on one project pays $39 a month. A company pays one annual price for unlimited "
+    "engineers. Every feature is in both — no per-seat cloud bill and no per-module unlock.")
+pricing += f"""
+<header class="phero"><div class="wrap">
+  <div class="crumb"><a href="index.html">Engineering Workspace</a> / Pricing</div>
+  <div class="eyebrow">What it costs</div>
+  <h1>Two ways in, and no surprises in either.</h1>
+  <p class="sub">An engineer who wants this for their own work should not have to write an e-mail
+  to find out the price · so here it is. A company buying it for a floor of engineers is a
+  conversation, because the answer depends on how many projects and how much help you want at
+  the start.</p>
+</div></header>
+
+<div class="wrap" style="margin-top:-26px">
+  {plans_block()}
+</div>
+
+<section><div class="wrap">
+  <div class="eyebrow">Side by side</div>
+  <h2>What is in each</h2>
+  <p class="sub">The engineering is identical. What the company licence adds is everything that
+  exists because more than one person is involved.</p>
+  {plan_table()}
+</div></section>
+
+<section><div class="wrap">
+  <div class="eyebrow">Straight answers</div>
+  <h2>The questions people actually ask</h2>
+  <div class="caps" style="margin-top:30px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))"><div class="cap" style="padding:17px 19px"><b style="font-size:13.5px">Is the personal plan a cut-down version?</b><span style="font-size:12.5px;margin-top:6px">No. It is the same build a company runs. Before you send reads the same specifications, the studios mark up the same drawings, all 43 calculators are there, and Before the pour watches the same pouring plan. What it does not carry is the machinery that only matters with a team: roles and permissions, the client portal, the cross-project view, automations. A single engineer has no use for any of those.</span></div><div class="cap" style="padding:17px 19px"><b style="font-size:13.5px">What if I work on more than one project?</b><span style="font-size:12.5px;margin-top:6px">The personal plan holds one project at a time. You can change which project that is, but not run two at once &middot; that is the line between the personal plan and the company licence. If you routinely carry three jobs, ask about the company licence: it is not priced per person, so for one busy consultant it is often the sensible answer.</span></div><div class="cap" style="padding:17px 19px"><b style="font-size:13.5px">How do I pay, and can I stop?</b><span style="font-size:12.5px;margin-top:6px">Today: you ask, a person answers, and you receive an invoice. There is no card form on this site yet &middot; when there is, it will be said here plainly. You stop by not renewing; there is no notice period and nothing to cancel by phone. Your documents were always on your own machine, so stopping costs you no data.</span></div><div class="cap" style="padding:17px 19px"><b style="font-size:13.5px">What happens to my work when the licence ends?</b><span style="font-size:12.5px;margin-top:6px">Nothing is deleted, disabled or held. The app keeps running with an <b>Unlicensed</b> badge and every document stays exactly where it was, on your own disk. A tool used on a live site must never brick itself mid-project &middot; that is a design rule here, not a courtesy.</span></div><div class="cap" style="padding:17px 19px"><b style="font-size:13.5px">Does the price include the AI features?</b><span style="font-size:12.5px;margin-top:6px">The licence covers the software. AI tasks &middot; the assistant, document reviews, the full outbound check &middot; run on <b>your own AI key</b>, which you paste into the app once. That is deliberate: you see the real cost and control it, and we never mark it up. Most of the product &middot; search, registers, claims, studios, calculators, the instant outbound pass &middot; needs no AI account at all.</span></div><div class="cap" style="padding:17px 19px"><b style="font-size:13.5px">Where does my data live?</b><span style="font-size:12.5px;margin-top:6px">On the machine you run it on. There is no cloud tenancy in the middle, no copy of your specifications on our servers, and nothing to leak from a place you do not control. The <a href="security.html" style="color:var(--teal)">security page</a> sets out the whole picture.</span></div><div class="cap" style="padding:17px 19px"><b style="font-size:13.5px">Can I try it before paying anything?</b><span style="font-size:12.5px;margin-top:6px">Yes &middot; 15 days, the full product, on a realistic demo project that cannot touch anyone&rsquo;s live data. Most people start there. <a href="index.html#request" style="color:var(--teal)">Request a trial &rarr;</a></span></div></div>
+</div></section>
+
+<section><div class="wrap" style="text-align:center">
+  <h2>Ask for the plan you want</h2>
+  <p class="sub" style="margin:0 auto 24px">One short form. A person reads it and answers ·
+  usually within a day.</p>
+  <a class="btn btn-primary" href="index.html#request">Go to the request form</a>
+  <p style="margin-top:16px;font-size:12.5px;color:var(--ink3)">Or write to
+  <a href="mailto:{EMAIL}" style="color:var(--teal);font-weight:600">{EMAIL}</a>.</p>
+</div></section>
+"""
+write_page("pricing.html", pricing + FOOT, priority="0.9", changefreq="monthly")
+
+
+security = page_head(
+    "Security — EngSpace · Engineering Workspace",
+    "Where the data lives, how access works, and what we will show you before you trust us with a project.")
+security += f"""
+<header class="phero"><div class="wrap">
+  <div class="crumb"><a href="index.html">Engineering Workspace</a> / Security</div>
+  <div class="eyebrow">Security &amp; architecture</div>
+  <h1>Your record, your hardware,<br>our discipline.</h1>
+  <p class="sub" style="margin-top:16px">Engineering correspondence is confidential and contractual.
+  This page says plainly how the workspace protects it — and, just as plainly, what is architecture
+  and what is not yet an independent audit.</p>
+</div></header>
+<div class="wrap">
+
+  <div class="block">
+    <div class="eyebrow">The architecture</div>
+    <h2 style="font-size:24px">Where everything lives.</h2>
+    <div class="caps" style="margin-top:24px">
+      <div class="cap"><b>Data on your infrastructure</b><span>Documents, the search index and the database live on the machine your company operates. Indexing, OCR and search run locally; a thousand questions cost nothing and leave nothing behind in a vendor cloud.</span></div>
+      <div class="cap"><b>One encrypted door</b><span>Remote access passes through an encrypted tunnel with an edge allow-list; there is no anonymous surface. Sign-in is always required, and failed logins are rate-limited and alerted.</span></div>
+      <div class="cap"><b>Two-factor for administrators</b><span>Admin sessions can install updates, so a password alone is not accepted: administrators must enrol an authenticator app before their first session.</span></div>
+      <div class="cap"><b>Roles that fence, server-side</b><span>Owner, admin, engineer, viewer, client, management. A client sign-in reaches one read-only portal route and nothing else — enforced in the API, not hidden in the interface. What the company switches off in the portal is never even sent, and an address typed by hand reveals nothing a role may not have.</span></div>
+      <div class="cap"><b>Walked, not assumed</b><span>The boundary is not a claim on a page: before each release the whole product is walked twice, once as an ordinary engineer and once as an administrator who is not the owner, watching every request the browser makes. Anything a role should not see and still receives is a defect, and is fixed before the release ships.</span></div>
+      <div class="cap"><b>The operator's own machine stays theirs</b><span>Mail, calendar and notes read from the computer the workspace runs on belong to the person who owns that workspace — not to the administrator role. A customer's IT administrator can run their whole company in it and never reach them, unless the owner deliberately widens that.</span></div>
+      <div class="cap"><b>Per-user encrypted secrets</b><span>Mail sign-ins and AI keys are stored encrypted per person. No user, and no API, can read another's mailbox or key.</span></div>
+      <div class="cap"><b>Signed updates only</b><span>Update packages must carry a valid signature from the seller's key to install. A tampered package refuses itself.</span></div>
+      <div class="cap"><b>Licences without a data path</b><span>Installed copies validate a signed licence file locally and renew it with a small daily check-in that carries version, machine code and document <em>counts</em> — never content. If the licence service is unreachable the app keeps working through a generous grace window, and an expired licence turns the workspace read-only; nothing is ever disabled or deleted remotely. A site tool must never brick mid-project.</span></div>
+      <div class="cap"><b>Backups, two layers</b><span>Scheduled local backups of the record, plus an encrypted nightly backup of the application record to storage the operator chooses. Restores are part of the design, not an afterthought.</span></div>
+      <div class="cap"><b>An audit trail that remembers</b><span>Logins, changes, approvals, substitutions, escalations and deletions — who did what, permanently on the record.</span></div>
+      <div class="cap"><b>Trials cannot touch you</b><span>Trial and demo accounts are pinned to a demo project. Live projects do not exist for them.</span></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="eyebrow">Honesty clause</div>
+    <h2 style="font-size:24px">What this page is, and is not.</h2>
+    <p class="sub" style="font-size:14.5px">Everything above is how the system is built and
+    operated today. It is not yet an independent certification, and we will not pretend
+    otherwise. Before the first multi-company rollout, the roadmap includes an independent
+    penetration test, and practices are run ISO 27001-aligned ahead of any formal programme.</p>
+    <div class="caps" style="margin-top:22px">
+      <div class="cap"><b>On request, under NDA</b><span>The architecture and data-location pack, the backup and restore runbook, the update-signing design, and a security review call with the person who built it.</span></div>
+      <div class="cap"><b>In every workspace</b><span>A security one-pager for your IT department, produced from the app itself in one press.</span></div>
+      <div class="cap"><b>Found something?</b><span>Report it to <a href="mailto:{EMAIL}" style="color:var(--teal)">{EMAIL}</a>. Security reports are answered personally and fast, and we credit responsible disclosure.</span></div>
+    </div>
+  </div>
+
+  <div class="ctaband reveal">
+    <div style="flex:1;min-width:260px"><h3>Bring your IT department.</h3>
+    <div style="font-size:13px;color:var(--ink2);margin-top:4px">The trial is the fastest way to see the architecture from the inside.</div></div>
+    <a class="btn btn-primary" href="index.html#request">Request a trial →</a>
+  </div>
+  <div class="pn"><a href="about.html">← About</a><a href="proven.html">Proven in delivery →</a></div>
+</div>"""
+write_page("security.html", security + FOOT, priority="0.8")
+
+
+# ---------------- requirements ----------------
+# Reference-machine figures. The corpus numbers are the live index of the
+# reference MacBook; benchmark rows appear only once measured (never invented).
+REF_MEASURED = {
+    "docs": "72,000+", "pages": "230,000+",
+    # measured 28 Aug 2026 on the reference machine (8 cores · 16 GB ·
+    # Apple Silicon): 129 GB library → 2.8 GB index; CPU 18,977 MB/s
+    # all-cores; disk 811/7,046 MB/s write/read; verdict STRONG.
+    "index_ratio": "under 3% of the library's size (measured: a 129 GB "
+                   "library carries a 2.8 GB index)",
+    "first_index": None,      # e.g. "overnight for 230,000 pages"
+}
+
+requirements = page_head(
+    "Will it run on my machine? — EngSpace · Engineering Workspace",
+    "What the installed workspace needs: memory, disk, processor — and the first-run check that tells you what your computer can comfortably carry.")
+requirements += f"""
+<header class="phero"><div class="wrap">
+  <div class="crumb"><a href="index.html">Engineering Workspace</a> / Requirements</div>
+  <div class="eyebrow">System requirements</div>
+  <h1>Will it run on my machine?</h1>
+  <p class="sub" style="margin-top:16px">The workspace installs and runs entirely on your computer —
+  indexing, OCR, search, everything. So the honest question is not "do you meet the minimum" but
+  "how much library will feel comfortable here". This page answers both, and the installer itself
+  measures your machine on first run and tells you plainly.</p>
+</div></header>
+<div class="wrap">
+
+  <div class="block">
+    <div class="eyebrow">The short answer</div>
+    <h2 style="font-size:24px">Three tiers, no mystery.</h2>
+    <div style="overflow-x:auto;margin-top:22px"><table class="cmp">
+      <tr><th></th><th>Minimum — it works</th><th>Comfortable — it flies</th></tr>
+      <tr class="grp"><td>Memory</td><td>8 GB</td><td>16 GB or more</td></tr>
+      <tr class="grp"><td>Processor</td><td>4 modern 64-bit cores</td><td>8 cores (Apple Silicon or recent Intel/AMD)</td></tr>
+      <tr class="grp"><td>Disk</td><td>SSD strongly advised<span class="gsub">a spinning disk works, slowly</span></td><td>SSD with free space ≈ your library + 20%</td></tr>
+      <tr class="grp"><td>System</td><td>macOS 12+ (Apple Silicon) · Windows 10/11 64-bit</td><td>the same</td></tr>
+      <tr class="grp"><td>Network</td><td>only for activation, updates and the daily licence check-in<span class="gsub">documents never leave the machine</span></td><td>the same</td></tr>
+    </table></div>
+    <p style="margin-top:16px;font-size:13.5px;color:var(--ink3)">Below minimum the app still
+    runs — it tells you so and indexes patiently rather than refusing. Company servers follow the
+    same shape, sized to the team; that sizing conversation is part of the company licence.</p>
+  </div>
+
+  <div class="block">
+    <div class="eyebrow">Measured, not promised</div>
+    <h2 style="font-size:24px">The installer checks for you.</h2>
+    <div class="caps" style="margin-top:24px">
+      <div class="cap"><b>A 15-second benchmark on first run</b><span>Before anything is indexed, the installer times your processor and your disk and reads your memory, then says in one sentence roughly how many pages of documents this machine will carry comfortably. No guessing, no surprise on day three.</span></div>
+      <div class="cap"><b>Sizing the disk</b><span>Plan for your document library itself plus about 10% headroom for the search index and working cache, and about 6 GB for the application, its runtime and the bundled search models. Measured, the index is small: our 129 GB reference library carries a 2.8 GB index — under 3%. A 100 GB library is comfortable with ~120 GB free on an SSD.</span></div>
+      <div class="cap"><b>Scanned is the heavy part</b><span>Born-digital PDFs index quickly. Scanned pages pass through OCR, which is where the processor earns its keep — a big scanned backlog indexes overnight, then stays indexed; day-to-day additions are unnoticeable.</span></div>
+      <div class="cap"><b>The reference machine</b><span>The workspace is developed and run daily against a live index of {REF_MEASURED["docs"]} documents · {REF_MEASURED["pages"]} pages on one 8-core, 16 GB Apple-Silicon laptop{(" · the index adds " + REF_MEASURED["index_ratio"]) if REF_MEASURED["index_ratio"] else ""}{(" · first full index: " + REF_MEASURED["first_index"]) if REF_MEASURED["first_index"] else ""}.</span></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="eyebrow">Platforms, plainly</div>
+    <h2 style="font-size:24px">macOS and Windows.</h2>
+    <div class="caps" style="margin-top:24px">
+      <div class="cap"><b>macOS (Apple Silicon)</b><span>The reference platform. Scanned-document OCR uses the system's own engine — the best reading of stamped and scanned Arabic we have measured.</span></div>
+      <div class="cap"><b>Windows 10/11 (64-bit)</b><span>The same product, same installer experience. Scanned Arabic uses a bundled open OCR engine that reads clean Arabic text essentially perfectly in our tests; on dense mixed Arabic-English lines it is good and improving, and we say so rather than round up. Born-digital PDFs are identical on both platforms.</span></div>
+      <div class="cap"><b>Intel Macs &amp; Linux servers</b><span>Ask — the company package covers Linux servers; an Intel-Mac build exists when someone needs it.</span></div>
+    </div>
+    <p style="margin-top:18px;font-size:13.5px;color:var(--ink2)">Not sure? <a href="index.html#request" style="color:var(--teal);font-weight:600">Request the trial</a> — the first run measures your machine and answers for your exact computer.</p>
+  </div>
+
+  <div class="pn" style="margin-top:10px"><a href="pricing.html">← Pricing</a><a href="security.html">Security &amp; architecture →</a></div>
+</div>"""
+write_page("requirements.html", requirements + FOOT, priority="0.7")
+
+
+terms = page_head(
+    "Terms — EngSpace · Engineering Workspace",
+    "Plain terms for the website and the trial.")
+terms += f"""
+<header class="phero"><div class="wrap">
+  <div class="crumb"><a href="index.html">Engineering Workspace</a> / Terms</div>
+  <div class="eyebrow">Terms of use</div>
+  <h1>Plain terms.</h1>
+  <p class="sub" style="margin-top:16px">Short, readable, and written by the owner. Updated 23 August 2026.</p>
+</div></header>
+<div class="wrap"><div class="block" style="max-width:760px">
+  <div class="caps">
+    <div class="cap"><b>The website</b><span>This site presents the Engineering Workspace software. Its content is provided for information; we keep it accurate and honest, and correct it when it is not.</span></div>
+    <div class="cap"><b>The software</b><span>Engineering Workspace, its interface and its intelligence engine are proprietary and remain the property of Mohamed Abokhatwa. Production use is licensed per workspace under an annual agreement concluded directly with the owner.</span></div>
+    <div class="cap"><b>Trials</b><span>Trial accounts are free, demo-scoped, time-limited and personal. They live inside a demonstration project and cannot reach live data. We may close a trial at any time; you may walk away at any time. Nothing you see in a demo project is real project data.</span></div>
+    <div class="cap"><b>Engineering responsibility</b><span>The workspace assists engineering judgement; it does not replace it. AI answers carry citations so a professional can verify them, and outputs must be reviewed by a qualified engineer before use. The professional of record stays responsible for what is issued.</span></div>
+    <div class="cap"><b>Acceptable use</b><span>No attempts to access another company's data, no resale or sublicensing of access, and no use of the trial to build a competing product. Security researchers acting in good faith are welcome — see the security page.</span></div>
+    <div class="cap"><b>Liability</b><span>The website and trials are provided as-is, without warranty. For production use, warranties, support and liability are defined in the signed annual agreement, not on this page.</span></div>
+    <div class="cap"><b>Governing law</b><span>These terms are governed by the laws of the Kingdom of Saudi Arabia.</span></div>
+    <div class="cap"><b>Contact</b><span><a href="mailto:{EMAIL}" style="color:var(--teal)">{EMAIL}</a></span></div>
+  </div>
+  <div class="pn" style="margin-top:34px"><a href="privacy.html">Privacy →</a><a href="index.html">← Back to the overview</a></div>
+</div></div>"""
+write_page("terms.html", terms + FOOT, priority="0.4")
+
+
+privacy = page_head(
+    "Privacy — EngSpace · Engineering Workspace",
+    "What this site collects (almost nothing), and where app data lives (with you).")
+privacy += f"""
+<header class="phero"><div class="wrap">
+  <div class="crumb"><a href="index.html">Engineering Workspace</a> / Privacy</div>
+  <div class="eyebrow">Privacy</div>
+  <h1>Almost nothing to disclose.<br>That is the point.</h1>
+  <p class="sub" style="margin-top:16px">Updated 23 August 2026. Written in plain language on purpose.</p>
+</div></header>
+<div class="wrap"><div class="block" style="max-width:760px">
+  <div class="caps">
+    <div class="cap"><b>This website</b><span>Google Analytics runs on these pages to count visits in aggregate — which pages are read, from which country, on what kind of device. It sets its own cookies to do that, and Google sees the requests your browser makes to it. The pages themselves are static: nothing you type reaches us, and there are no advertising trackers. Fonts load from Google Fonts, and film players load from YouTube's privacy-enhanced domain when you press play; those services see the requests your browser makes to them.</span></div>
+    <div class="cap"><b>The trial form</b><span>If you request a trial we receive what you type: name, e-mail, company, role and your message. It is used to review and answer your request and for nothing else — never sold, never added to a marketing list. Write to us and it is deleted.</span></div>
+    <div class="cap"><b>E-mail</b><span>If you e-mail us, we have your e-mail. We use it to reply.</span></div>
+    <div class="cap"><b>The application itself</b><span>Engineering Workspace runs on the operating company's own infrastructure. Project documents, the index, the database, mail tokens and AI keys live there, under that company's control — not on our servers. Per-user secrets are encrypted; roles and an audit trail govern access. We could not read your project record if we wanted to: we do not have it.</span></div>
+    <div class="cap"><b>AI usage</b><span>AI tasks run on the AI account the workspace or the user connects. Prompts for those tasks go to that AI provider under that provider's terms; local features — search, registers, workflows, studios, calculators — send nothing anywhere.</span></div>
+    <div class="cap"><b>The licence check-in</b><span>A licensed or trial install contacts our licence service about once a day to renew its licence: it sends the app version, a machine code (a hash — not your hardware serials), the computer's name and the <em>count</em> of documents and pages indexed. Never a file name, never document content, never a search query. If the service is unreachable the app simply keeps working on its current licence; if you stop the check-ins the licence stops renewing and the workspace winds down gently to read-only — nothing is ever deleted remotely.</span></div>
+    <div class="cap"><b>Questions</b><span><a href="mailto:{EMAIL}" style="color:var(--teal)">{EMAIL}</a></span></div>
+  </div>
+  <div class="pn" style="margin-top:34px"><a href="terms.html">← Terms</a><a href="index.html">Back to the overview →</a></div>
+</div></div>"""
+write_page("privacy.html", privacy + FOOT, priority="0.4")
+
+
+# ---------------- llms.txt — the product, readable by machines ----------------
+(ROOT / "llms.txt").write_text(f"""# EngSpace · Engineering Workspace
+
+> Project intelligence for engineering and construction offices. It reads the
+> project's own contract, specifications, drawings and correspondence, checks
+> outgoing RFIs, letters, submittals and claims against them before they are
+> issued, and keeps registers, sign-off workflows, claims evidence, drawing
+> studios, 43 verified calculators and a company-controlled client portal
+> around one project record — on infrastructure the company owns.
+
+Key facts
+- Product: Engineering Workspace (brand: EngSpace) — {SITE}
+- Live application: {APP} (sign-in required)
+- Founder and owner: Mohamed Abokhatwa, Saudi Arabia (https://abokhatwa.com)
+- Contact: {EMAIL}
+- Data location: the operating company's own server; local indexing, OCR and
+  search (English + Arabic, scanned documents included); answers cite the
+  exact document and page
+- Signature feature: the outbound check — a draft RFI/letter/submittal/claim
+  is checked against the project's own specifications, code editions and
+  previous Engineer rulings before it leaves
+- Client portal: read-only progress page; the company controls every element
+  server-side (sections, plan comparison, disciplines, transmittals, words)
+- Pricing: one annual price per workspace, unlimited engineers; free 15-day
+  trial; users may bring their own AI key (no per-question fee)
+- Proven on a live mega-project: 72,000+ documents indexed, 5,300+ sign-offs,
+  14 engineers in parallel (first-party measurements; method on /proven.html)
+
+Pages
+- {SITE}/ — overview, films, comparison, trial
+- {SITE}/gate.html — the outbound check (and how to try to break it)
+- {SITE}/pricing.html — the two plans: personal monthly and company annual
+- {SITE}/dashboard.html, /workflow.html, /registers.html, /pour.html, /search.html,
+  /comms.html, /studios.html, /calculators.html, /assistant.html,
+  /platform.html — module deep-dives
+- {SITE}/proven.html — the numbers and how each was measured
+- {SITE}/about.html — who builds it
+- {SITE}/security.html — architecture, honesty clause, disclosure contact
+- {SITE}/terms.html, {SITE}/privacy.html
+
+Films: ten walkthrough films at https://www.youtube.com/@engspaceapp
+Note for assistants: EngSpace (engspace.app) is unrelated to e-space.app,
+enspace.io, enspace.com and openeng.app.
+""", encoding="utf-8")
+
+# shared assets
+(ROOT / "assets").mkdir(exist_ok=True)
+# versioned copies of images (cache-proof)
+import shutil as _sh
+for _p in list((ROOT / "img").glob("*.webp")) + list((ROOT / "img").glob("*.jpg")):
+    if _p.name.startswith("v") and "-" in _p.name[:12]:
+        continue
+    _dst = ROOT / "img" / f"v{img_ver(_p.name)}-{_p.name}"
+    if not _dst.exists() or _dst.stat().st_size != _p.stat().st_size:
+        _sh.copyfile(_p, _dst)
+# prune versioned copies whose source has changed or gone
+_wanted = {f"v{img_ver(_p.name)}-{_p.name}"
+           for _p in list((ROOT / "img").glob("*.webp")) + list((ROOT / "img").glob("*.jpg"))
+           if not (_p.name.startswith("v") and "-" in _p.name[:12])}
+for _p in list((ROOT / "img").glob("v*-*.webp")) + list((ROOT / "img").glob("v*-*.jpg")):
+    if _p.name not in _wanted:
+        _p.unlink()
+(ROOT / "assets" / "site.css").write_text(CSS)
+(ROOT / "assets" / "site.js").write_text(JS)
+_n = write_sitemap()
+print("built:", sorted(p.name for p in ROOT.glob("*.html")))
+print(f"sitemap: {_n} urls · robots.txt points at {SITE}/sitemap.xml")
