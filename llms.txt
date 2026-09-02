@@ -36,6 +36,10 @@ Pages
 - https://engspace.app/proven.html — the numbers and how each was measured
 - https://engspace.app/about.html — who builds it
 - https://engspace.app/security.html — architecture, honesty clause, disclosure contact
+- https://engspace.app/security-whitepaper.html — the security whitepaper: where data lives, the
+  complete list of outbound connections, roles, signed updates, backups, and the
+  ISO/IEC 27001-aligned programme behind it (aligned, not certified)
+- https://engspace.app/.well-known/security.txt — vulnerability disclosure contact (RFC 9116)
 - https://engspace.app/terms.html, https://engspace.app/privacy.html
 
 Films: ten walkthrough films at https://www.youtube.com/@engspaceapp
