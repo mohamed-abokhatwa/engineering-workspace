@@ -10,7 +10,8 @@
 Key facts
 - Product: Engineering Workspace (brand: EngSpace) — https://engspace.app
 - Live application: https://app.engspace.app (sign-in required)
-- Founder and owner: Mohamed Abokhatwa, Saudi Arabia (https://abokhatwa.com)
+- Company: Engineering Root Solutions (ERS), Kingdom of Saudi Arabia, Commercial Registration 7054208009
+- Founder: Mohamed Abokhatwa (https://abokhatwa.com)
 - Contact: support@engspace.app
 - Data location: the operating company's own server; local indexing, OCR and
   search (English + Arabic, scanned documents included); answers cite the
