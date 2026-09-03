@@ -9,11 +9,12 @@
 
 Key facts
 - Product: Engineering Workspace (brand: EngSpace) — https://engspace.app
-- Live application: https://app.engspace.app (sign-in required)
+- Where it runs: on the customer's own computer or server, from the Microsoft
+  Store or the download page; there is no hosted service to sign in to
 - Company (publisher): Engineering Root Solutions (ERS), Kingdom of Saudi Arabia, Commercial Registration 7054208009
 - Founder of the app: Mohamed Abokhatwa (https://abokhatwa.com)
 - Contact: support@engspace.app
-- Data location: the operating company's own server; local indexing, OCR and
+- Data location: the customer's own computer or server; local indexing, OCR and
   search (English + Arabic, scanned documents included); answers cite the
   exact document and page
 - Signature feature: the outbound check — a draft RFI/letter/submittal/claim

@@ -40,32 +40,22 @@ document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>{
   b.classList.add('on');
   document.getElementById('tp-'+b.dataset.t).classList.add('on');
 }));
-const tf=document.getElementById('trialForm');
-if(tf){const API='https://app.engspace.app/api/public/trial-request';
-const post=b=>fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)});
-tf.addEventListener('submit',async ev=>{ev.preventDefault();
-const $=id=>document.getElementById(id);const err=$('f-err'),ok=$('f-ok'),btn=$('f-btn');
+const tf=document.getElementById('trialForm');if(tf){
+tf.addEventListener('submit',ev=>{ev.preventDefault();
+const $=id=>document.getElementById(id);
+const err=$('f-err'),ok=$('f-ok'),btn=$('f-btn');
 err.style.display='none';err.textContent='';
 const name=$('f-name').value.trim(),email=$('f-email').value.trim();
 if(name.length<2){err.textContent='Please give your name.';err.style.display='block';return}
 if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){err.textContent='That email address does not look right.';err.style.display='block';return}
+if($('f-web').value)return;
 const planEl=$('f-plan');const plan=planEl?planEl.value:'trial';
-const body={name,email,company:$('f-company').value.trim(),role_title:$('f-role').value.trim(),
-message:$('f-msg').value.trim(),plan:plan,website:$('f-web').value};
-btn.disabled=true;btn.textContent='Sending…';
-try{let r;
-try{r=await post(body)}
-catch(_e){await new Promise(res=>setTimeout(res,1600));r=await post(body)}
-if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'The request could not be sent.');
-tf.querySelectorAll('input,textarea,select,button').forEach(x=>x.disabled=true);
-ok.style.display='block';btn.textContent='Requested ✓';
-}catch(e){
-const mail='mailto:support@engspace.app?subject='+encodeURIComponent('Trial request — '+name)
-+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+'\nCompany: '+body.company
-+'\nRole: '+body.role_title+'\n\n'+body.message);
-err.innerHTML=(e.message||'Could not reach the server right now.')
-+' Nothing typed was lost — <a href="'+mail+'" style="color:inherit;text-decoration:underline;font-weight:600">send the same request by e-mail</a> and it reaches us at support@engspace.app.';
-err.style.display='block';btn.disabled=false;btn.textContent=labelFor(plan)}});
+const company=$('f-company').value.trim(),role=$('f-role').value.trim(),msg=$('f-msg').value.trim();
+const subj=plan==='personal'?'Personal plan':plan==='company'?'Company licence':'Free 15-day trial';
+const mail='mailto:support@engspace.app?subject='+encodeURIComponent(subj+' — '+name)+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+'\nCompany: '+company+'\nRole: '+role+'\nPlan: '+plan+'\n\n'+msg);
+ok.innerHTML='Your mail app is opening with the request written for you — press send and it reaches support@engspace.app. If nothing opened, <a href="'+mail+'" style="color:inherit;text-decoration:underline;font-weight:600">open it here</a>.';
+ok.style.display='block';btn.textContent='Ready to send ✓';
+location.href=mail;});
 const labelFor=v=>v==='personal'?'Ask for the personal plan':v==='company'?'Ask about a company licence':'Request my free 15-day trial';
 const syncBtn=()=>{const pe=document.getElementById('f-plan'),b=document.getElementById('f-btn');
 if(pe&&b&&b.textContent.indexOf('✓')<0&&!b.disabled)b.textContent=labelFor(pe.value)};
