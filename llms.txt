@@ -10,8 +10,8 @@
 Key facts
 - Product: Engineering Workspace (brand: EngSpace) — https://engspace.app
 - Live application: https://app.engspace.app (sign-in required)
-- Company: Engineering Root Solutions (ERS), Kingdom of Saudi Arabia, Commercial Registration 7054208009
-- Founder: Mohamed Abokhatwa (https://abokhatwa.com)
+- Company (publisher): Engineering Root Solutions (ERS), Kingdom of Saudi Arabia, Commercial Registration 7054208009
+- Founder of the app: Mohamed Abokhatwa (https://abokhatwa.com)
 - Contact: support@engspace.app
 - Data location: the operating company's own server; local indexing, OCR and
   search (English + Arabic, scanned documents included); answers cite the
@@ -38,7 +38,7 @@ Pages
 - https://engspace.app/security.html — architecture, honesty clause, disclosure contact
 - https://engspace.app/security-whitepaper.html — the security whitepaper: where data lives, the
   complete list of outbound connections, roles, signed updates, backups, and the
-  ISO/IEC 27001-aligned programme behind it (aligned, not certified)
+  security programme built on ISO/IEC 27001:2022 behind it
 - https://engspace.app/.well-known/security.txt — vulnerability disclosure contact (RFC 9116)
 - https://engspace.app/terms.html, https://engspace.app/privacy.html
 

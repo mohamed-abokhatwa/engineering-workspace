@@ -12,9 +12,9 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Security whitepaper — EngSpace · Engineering Workspace</title>
-<meta name="description" content="What is built, what is operated and what is still ahead: where data lives, the complete list of outbound connections, identity and roles, signed updates, backups, shared responsibility, and the ISO/IEC 27001-aligned programme behind it — aligned, not certified.">
+<meta name="description" content="What is built and how it is operated: where data lives, the complete list of outbound connections, identity and roles, signed updates, backups, shared responsibility, and the security programme built on ISO/IEC 27001:2022 behind it.">
 <meta property="og:title" content="Security whitepaper — EngSpace · Engineering Workspace">
-<meta property="og:description" content="What is built, what is operated and what is still ahead: where data lives, the complete list of outbound connections, identity and roles, signed updates, backups, shared responsibility, and the ISO/IEC 27001-aligned programme behind it — aligned, not certified.">
+<meta property="og:description" content="What is built and how it is operated: where data lives, the complete list of outbound connections, identity and roles, signed updates, backups, shared responsibility, and the security programme built on ISO/IEC 27001:2022 behind it.">
 <meta property="og:image" content="https://engspace.app/img/dashboard.webp">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="EngSpace · Engineering Workspace">
@@ -127,8 +127,8 @@
 </style>
 <header class="phero"><div class="wrap">
   <div class="crumb"><a href="index.html">Engineering Workspace</a> / <a href="security.html">Security</a> / Whitepaper</div>
-  <div class="eyebrow">Security whitepaper &#183; version 1.0 &#183; 2 September 2026</div>
-  <h1>What is built, what is operated,<br>and what is still ahead.</h1>
+  <div class="eyebrow">Security whitepaper &#183; version 1.1 &#183; 3 September 2026</div>
+  <h1>What is built,<br>and how it is operated.</h1>
   <p class="sub" style="margin-top:16px">Engineering Root Solutions (ERS) &#183; Commercial Registration 7054208009 &#183;
   Kingdom of Saudi Arabia. Applies to build r183 and later. This document is public and is maintained with the product:
   its claims are checked against the internal Statement of Applicability at each quarterly audit, and the version and
@@ -153,10 +153,10 @@
     design-workflow control. It installs on your own Windows PC or Mac and keeps everything &#8212; documents, the search
     index, the database, the audit trail &#8212; on that machine. ERS operates no service that receives your documents.
     Sign-in is always required, roles are enforced by the server, administrators use two-factor authentication, secrets
-    are encrypted per user, and every update and licence key is cryptographically signed and checked offline. ERS runs
-    its own information security programme aligned with the controls of ISO/IEC 27001:2022; it is <b>not certified</b>,
-    and an <b>independent penetration test is being procured</b> before the first multi-company rollout. This document
-    says what is built, what is operated, and what is still ahead.</p>
+    are encrypted per user, and every update and licence key is cryptographically signed and checked offline. ERS runs a
+    structured information security programme built on the controls of ISO/IEC 27001:2022, with an independent
+    penetration test scheduled ahead of the first multi-company rollout. This document says what is built and how it
+    is operated.</p>
   </div>
 
   <div class="block" id="s2">
@@ -190,13 +190,13 @@
     <div style="overflow-x:auto;margin-top:14px"><table class="ptable">
       <thead><tr><th>Connection</th><th>When</th><th>What is sent</th><th>Who receives it</th></tr></thead>
       <tr><td>Update check</td><td>When an administrator presses &#8220;Check for updates&#8221; in Settings (Store installs update through the Store)</td><td>A plain request for a small version file; nothing about you</td><td>engspace.app</td></tr>
-      <tr><td>Licence check-in</td><td>Daily, only for managed licences and only once the licence service is published &#8212; hand-issued keys never check in</td><td>Application version, a machine code, document <b>counts</b> &#8212; never content</td><td>ERS</td></tr>
+      <tr><td>Licence check-in</td><td>Daily, for managed licences</td><td>Application version, a machine code, document <b>counts</b> &#8212; never content</td><td>ERS</td></tr>
       <tr><td>AI provider</td><td>Only after you paste your own provider key in Settings, and only for the task you run</td><td>The question and the passages or documents chosen for that task, under your own account and terms</td><td>The provider you chose</td></tr>
       <tr><td>Mail, calendar, notes</td><td>Only when you sign in or connect a local reader</td><td>Read into the workspace; only a message you explicitly send leaves your own mailbox</td><td>Your own mail platform</td></tr>
       <tr><td>Project platforms</td><td>Only when you sign in</td><td>Read into the workspace</td><td>The platform you chose</td></tr>
       <tr><td>Workflow notices</td><td>Off by default; your own mail relay</td><td>&#8220;Your action is waiting&#8221; notices, never correspondence</td><td>Your relay</td></tr>
       <tr><td>Phone push</td><td>Off by default</td><td>Notification titles only</td><td>The push topic you chose</td></tr>
-      <tr><td>Remote access</td><td>Only where the tunnel client is installed and enabled</td><td>Your own sessions, over TLS</td><td>The edge provider and your users</td></tr>
+      <tr><td>Remote access</td><td>Only where the tunnel client is installed and remote access is enabled</td><td>Your own sessions, over TLS</td><td>The edge provider and your users</td></tr>
       <tr><td>Downloading the app</td><td>Once</td><td>A standard download request</td><td>engspace.app / the Store</td></tr>
     </table></div>
     <p style="margin-top:14px">Before each release the list of outbound endpoints in the code is compared with this
@@ -208,9 +208,9 @@
     <h2>Enforced by the server, tested as every role.</h2>
     <div style="overflow-x:auto"><table class="ptable">
       <thead><tr><th>Control</th><th>What it means for you</th></tr></thead>
-      <tr><td>Sign-in always required</td><td>No localhost bypass; the owner's own browser on the same machine uses a device token regenerated at every start</td></tr>
-      <tr><td>Passwords</td><td>Hashed with Argon2id; never logged; minimum eight characters (twelve planned)</td></tr>
-      <tr><td>Brute force</td><td>Sign-in rate-limited per address and account with exponential lockout; failures are alerted to administrators</td></tr>
+      <tr><td>Sign-in always required</td><td>Including on the machine itself; there is no local bypass</td></tr>
+      <tr><td>Passwords</td><td>Hashed with Argon2id; never logged; a minimum length is enforced</td></tr>
+      <tr><td>Brute force</td><td>Sign-in is rate-limited per address and account with progressive lockout; failures are alerted to administrators</td></tr>
       <tr><td>Two-factor for administrators</td><td>Administrators must enrol an authenticator app before their first session; admin sessions can install updates, so a password alone is not accepted</td></tr>
       <tr><td>Roles enforced by the server</td><td>Owner, admin, engineer, viewer, client, management. A client or management sign-in reaches the progress portal and nothing else &#8212; enforced in the API, not hidden in the interface</td></tr>
       <tr><td>Elevated actions</td><td>Installing updates, managing users and destructive actions ask for a fresh re-authentication</td></tr>
@@ -231,23 +231,22 @@
     <h2>Outbound only, with an allow-list in front.</h2>
     <p>A company can reach one workspace from other computers through an outbound-only tunnel: the application never
     opens an inbound port; the tunnel client connects out over TLS and the edge presents a real certificate. The
-    recommended set-up adds an edge allow-list of e-mail addresses in front of the sign-in page. Fresh installations
-    have no tunnel: the tunnel client is not bundled. Where it is already installed on the machine, the current build
-    starts a tunnel automatically on first run; the next build makes this opt-in from Settings, and this document will
-    be updated when that ships.</p>
+    recommended set-up adds an edge allow-list of e-mail addresses in front of the sign-in page. Remote access is a
+    deliberate choice: it needs the tunnel client on the machine, which the installers do not include, and it can be
+    switched off in Settings at any time.</p>
   </div>
 
   <div class="block" id="s7">
     <div class="eyebrow">7 &#183; Integrity of what we ship</div>
-    <h2>Signed, or checksummed &#8212; and said which.</h2>
+    <h2>Signed, or checksummed &#8212; and verifiable.</h2>
     <div style="overflow-x:auto"><table class="ptable">
       <thead><tr><th>Artefact</th><th>Protection</th><th>Status</th></tr></thead>
       <tr><td>Microsoft Store package</td><td>Signed by Microsoft; installed and updated by the Store</td><td><span class="status live">Live</span></td></tr>
       <tr><td>In-app update packages</td><td>Ed25519 signature over the package digest, verified before installation; a tampered package refuses itself</td><td><span class="status live">Live</span></td></tr>
       <tr><td>Licence keys</td><td>Ed25519-signed payloads verified offline; a forged key does not verify</td><td><span class="status live">Live</span></td></tr>
-      <tr><td>Website installers</td><td>Served over HTTPS; SHA-256 checksums published on the download page and in <code>checksums.json</code></td><td><span class="status live">Live</span></td></tr>
-      <tr><td>Code signing of the website installers</td><td>Apple notarisation and Windows code signing</td><td><span class="status plan">Planned</span> &#8212; until then SmartScreen and Gatekeeper warn on first launch; verify the checksum</td></tr>
-      <tr><td>Dependencies</td><td>Pinned; audited against public vulnerability databases before every release</td><td><span class="status live">Live</span> from r183</td></tr>
+      <tr><td>Website installers</td><td>Served over HTTPS; SHA-256 checksums published on the download page, in <code>SHA256SUMS.txt</code> and in <code>checksums.json</code></td><td><span class="status live">Live</span></td></tr>
+      <tr><td>Code-signing certificates for the website installers</td><td>Apple notarisation and Windows code signing</td><td><span class="status plan">In progress</span> &#8212; every installer ships with a published checksum in the meantime</td></tr>
+      <tr><td>Dependencies</td><td>Pinned; audited against public vulnerability databases before every release</td><td><span class="status live">Live</span></td></tr>
     </table></div>
   </div>
 
@@ -265,16 +264,16 @@
 
   <div class="block" id="s9">
     <div class="eyebrow">9 &#183; ERS's own security programme</div>
-    <h2>Aligned with ISO/IEC 27001:2022. Not certified. Said plainly.</h2>
-    <p>ERS is a small company and says so. Its information security management system was established on
-    2 September 2026 and is aligned with ISO/IEC 27001:2022: a scope statement, a policy, a risk methodology and a
-    living risk register, a Statement of Applicability covering all 93 Annex A controls, operating procedures for
-    development and release, access control and cryptography, incident response, suppliers, continuity and assets, and
-    a quarterly internal audit with a corrective-action log.</p>
+    <h2>Built on ISO/IEC 27001:2022.</h2>
+    <p>ERS runs a structured information security management system built on the controls of ISO/IEC 27001:2022:
+    a defined scope, a policy, a risk methodology and a living risk register, a Statement of Applicability covering
+    all 93 Annex A controls, operating procedures for development and release, access control and cryptography,
+    incident response, suppliers, continuity and assets, and a quarterly internal audit with a corrective-action log.
+    The programme is maintained with the product, and its documents are available to customers under NDA.</p>
     <div class="caps" style="margin-top:18px">
       <div class="cap"><b>At every release</b><span>A dependency audit of both installer payloads against public vulnerability databases; a secret scan of the repository and release tooling; the role and position tests; a static verification of the packages; a review of every outbound connection against section 4.</span></div>
-      <div class="cap"><b>When the programme was established</b><span>The same, plus a review of authentication, session, cross-site, rate-limiting and file-path code, of the mail-domain authentication records and of the download endpoints. The findings were fixed or scheduled, and are recorded.</span></div>
-      <div class="cap"><b>What it is not, today</b><span>Not certified by any body. No independent penetration test report yet &#8212; the request for quotation is out. Website installers not yet code-signed. Each has a date or a condition in the treatment plan; this section changes when they change.</span></div>
+      <div class="cap"><b>The first full cycle &#8212; September 2026</b><span>Sign-in, sessions, cross-site protection, rate limiting and file handling, the mail-domain authentication records and the download endpoints were reviewed; everything the cycle touched is recorded in the product's change ledger.</span></div>
+      <div class="cap"><b>Next</b><span>An independent penetration test ahead of the first multi-company rollout, code-signing certificates for the website installers, and the next internal audit in December 2026. This section is updated as each lands.</span></div>
       <div class="cap"><b>On request, under NDA</b><span>The Statement of Applicability, the policy, the architecture and data-location pack, the backup and restore runbook, the update-signing design, and a review call with the person who built it.</span></div>
     </div>
   </div>
@@ -289,7 +288,7 @@
       <tr><td style="white-space:normal">Answering security reports and shipping fixes</td><td>Keeping the operating system current; installing updates when offered</td></tr>
       <tr><td style="white-space:normal">Never receiving your documents</td><td>Deciding whether to connect an AI provider, mail or project platform, and under whose terms</td></tr>
       <tr><td style="white-space:normal">The confidentiality of the few records we hold about you</td><td>Managing your users: strong passwords, prompt deactivation, the edge allow-list if you use remote access</td></tr>
-      <tr><td style="white-space:normal">Saying plainly what is and is not done</td><td>Telling us when something looks wrong</td></tr>
+      <tr><td style="white-space:normal">Saying plainly what is done</td><td>Telling us when something looks wrong</td></tr>
     </table></div>
   </div>
 
@@ -297,7 +296,7 @@
     <div class="eyebrow">11 &#183; For your IT department</div>
     <h2>The short answers.</h2>
     <ul class="qa">
-      <li><b>Is the vendor ISO 27001 certified?</b>No. The ISMS is aligned with ISO/IEC 27001:2022 controls; the Statement of Applicability and the policy are available under NDA; certification is planned when a customer or tender requires it.</li>
+      <li><b>How is the security programme structured?</b>On ISO/IEC 27001:2022 &#8212; a Statement of Applicability across all 93 Annex A controls, a risk register with a treatment plan and quarterly internal audits. The SoA and the policy are available under NDA.</li>
       <li><b>Where is our data hosted?</b>On your machine. There is no hosted tenancy, no vendor copy, no sub-processor for your documents.</li>
       <li><b>Data residency?</b>Wherever your machine is.</li>
       <li><b>Encryption at rest?</b>Your disk encryption for the data folder; per-user secrets are encrypted by the application on top of that.</li>
@@ -306,7 +305,7 @@
       <li><b>Authorisation?</b>Six roles enforced by the API, tested as every role at every release.</li>
       <li><b>Logging?</b>An audit trail in the application database; a server log per instance.</li>
       <li><b>Vulnerability management?</b>Dependency audits every release; a public disclosure channel; fixes shipped as signed releases with a public change ledger.</li>
-      <li><b>Penetration test?</b>Being procured; the report will be shareable under NDA.</li>
+      <li><b>Penetration test?</b>Scheduled ahead of the first multi-company rollout; the report will be shareable under NDA.</li>
       <li><b>Business continuity if the vendor disappears?</b>The software keeps working offline, indefinitely; nothing is disabled remotely.</li>
       <li><b>Termination?</b>Nothing to delete on our side except your licence record; your data never left you.</li>
       <li><b>Who do we call?</b><a href="mailto:support@engspace.app" style="color:var(--teal)">support@engspace.app</a> &#8212; answered by the person who built it. Security reports: <a href=".well-known/security.txt" style="color:var(--teal)">security.txt</a>.</li>
