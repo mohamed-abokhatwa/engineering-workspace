@@ -103,8 +103,8 @@
   <div class="eyebrow">Security &amp; architecture</div>
   <h1>Your record, your hardware,<br>our discipline.</h1>
   <p class="sub" style="margin-top:16px">Engineering correspondence is confidential and contractual.
-  This page says plainly how the workspace protects it — and, just as plainly, what is architecture
-  and what is not yet an independent audit.</p>
+  This page says plainly how the workspace protects it, and how that is checked before every
+  release.</p>
 </div></header>
 <div class="wrap">
 
@@ -113,8 +113,8 @@
     <h2 style="font-size:24px">Where everything lives.</h2>
     <div class="caps" style="margin-top:24px">
       <div class="cap"><b>Data on your infrastructure</b><span>Documents, the search index and the database live on the machine your company operates. Indexing, OCR and search run locally; a thousand questions cost nothing and leave nothing behind in a vendor cloud.</span></div>
-      <div class="cap"><b>One encrypted door</b><span>Remote access passes through an encrypted tunnel with an edge allow-list; there is no anonymous surface. Sign-in is always required, and failed logins are rate-limited and alerted.</span></div>
-      <div class="cap"><b>Two-factor for administrators</b><span>Admin sessions can install updates, so a password alone is not accepted: administrators must enrol an authenticator app before their first session.</span></div>
+      <div class="cap"><b>Remote access, when you want it</b><span>It is off until you switch it on. While it is on it runs through an encrypted tunnel, sign-in is always required, and the workspace tells you if the edge allow-list is not yet in place. Failed sign-ins are rate-limited and reported to the owner.</span></div>
+      <div class="cap"><b>Two-factor where it counts</b><span>An administrator can install updates, so a password alone is never accepted: administrators enrol an authenticator app before their first session. The same can be required of everyone, and is asked of everyone by default while remote access is on. Passwords are twelve characters or more, and common ones are refused.</span></div>
       <div class="cap"><b>Roles that fence, server-side</b><span>Owner, admin, engineer, viewer, client, management. A client sign-in reaches one read-only portal route and nothing else — enforced in the API, not hidden in the interface. What the company switches off in the portal is never even sent, and an address typed by hand reveals nothing a role may not have.</span></div>
       <div class="cap"><b>Walked, not assumed</b><span>The boundary is not a claim on a page: before each release the whole product is walked twice, once as an ordinary engineer and once as an administrator who is not the owner, watching every request the browser makes. Anything a role should not see and still receives is a defect, and is fixed before the release ships.</span></div>
       <div class="cap"><b>The operator's own machine stays theirs</b><span>Mail, calendar and notes read from the computer the workspace runs on belong to the person who owns that workspace — not to the administrator role. A customer's IT administrator can run their whole company in it and never reach them, unless the owner deliberately widens that.</span></div>
@@ -148,9 +148,8 @@
     <div class="eyebrow">In plain words</div>
     <h2 style="font-size:24px">What this page is.</h2>
     <p class="sub" style="font-size:14.5px">Everything above is how the system is built and
-    operated today, described in plain words rather than badges. Independent assurance is part of
-    the roadmap &#8212; a penetration test ahead of the first multi-company rollout &#8212; and this
-    page is updated as each step lands.</p>
+    operated today, described in plain words rather than badges &#8212; and kept current with the
+    product, release by release.</p>
     <div class="caps" style="margin-top:22px">
       <div class="cap"><b>On request, under NDA</b><span>The architecture and data-location pack, the backup and restore runbook, the update-signing design, and a security review call with the person who built it.</span></div>
       <div class="cap"><b>In every workspace</b><span>A security one-pager for your IT department, produced from the app itself in one press.</span></div>
