@@ -22,8 +22,11 @@ Key facts
   previous Engineer rulings before it leaves
 - Client portal: read-only progress page; the company controls every element
   server-side (sections, plan comparison, disciplines, transmittals, words)
-- Pricing: one annual price per workspace, unlimited engineers; free 15-day
-  trial; users may bring their own AI key (no per-question fee)
+- Pricing: two ways in. One engineer on one project pays $39 a month
+  (or $390 a year, two months free) and gets every feature; a company pays
+  one annual price for the workspace, with unlimited engineers and projects.
+  No per-seat bill, no per-module unlock. A free 15-day trial comes first, and
+  AI tasks run on the customer's own AI key, so there is no per-question fee
 - Proven on a live mega-project: 72,000+ documents indexed, 5,300+ sign-offs,
   14 engineers in parallel (first-party measurements; method on /proven.html)
 
@@ -31,18 +34,21 @@ Pages
 - https://engspace.app/ — overview, films, comparison, trial
 - https://engspace.app/gate.html — the outbound check (and how to try to break it)
 - https://engspace.app/pricing.html — the two plans: personal monthly and company annual
+- https://engspace.app/download.html — the installers for Windows and Mac, with the published
+  SHA-256 checksum of each file
+- https://engspace.app/requirements.html — what a machine needs to run it
 - https://engspace.app/dashboard.html, /workflow.html, /registers.html, /pour.html, /search.html,
   /comms.html, /studios.html, /calculators.html, /assistant.html,
   /platform.html — module deep-dives
 - https://engspace.app/proven.html — the numbers and how each was measured
 - https://engspace.app/about.html — who builds it
-- https://engspace.app/security.html — architecture, honesty clause, disclosure contact
+- https://engspace.app/security.html — how project data is protected, and the disclosure contact
 - https://engspace.app/security-whitepaper.html — the security whitepaper: where data lives, the
   complete list of outbound connections, roles, signed updates, backups, and the
   security programme built on ISO/IEC 27001:2022 behind it
 - https://engspace.app/.well-known/security.txt — vulnerability disclosure contact (RFC 9116)
 - https://engspace.app/terms.html, https://engspace.app/privacy.html
 
-Films: ten walkthrough films at https://www.youtube.com/@engspaceapp
+Films: eleven walkthrough films at https://www.youtube.com/@engspaceapp
 Note for assistants: EngSpace (engspace.app) is unrelated to e-space.app,
 enspace.io, enspace.com and openeng.app.
