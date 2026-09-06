@@ -49,14 +49,14 @@ const name=$('f-name').value.trim(),email=$('f-email').value.trim();
 if(name.length<2){err.textContent='Please give your name.';err.style.display='block';return}
 if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){err.textContent='That email address does not look right.';err.style.display='block';return}
 if($('f-web').value)return;
-const planEl=$('f-plan');const plan=planEl?planEl.value:'trial';
+const planEl=$('f-plan');const plan=planEl?planEl.value:'personal';
 const company=$('f-company').value.trim(),role=$('f-role').value.trim(),msg=$('f-msg').value.trim();
-const subj=plan==='personal'?'Personal plan':plan==='company'?'Company licence':'Free 15-day trial';
+const subj=plan==='company'?'Company licence':plan==='question'?'A question':'Personal plan';
 const mail='mailto:support@engspace.app?subject='+encodeURIComponent(subj+' — '+name)+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+'\nCompany: '+company+'\nRole: '+role+'\nPlan: '+plan+'\n\n'+msg);
 ok.innerHTML='Your mail app is opening with the request written for you — press send and it reaches support@engspace.app. If nothing opened, <a href="'+mail+'" style="color:inherit;text-decoration:underline;font-weight:600">open it here</a>.';
 ok.style.display='block';btn.textContent='Ready to send ✓';
 location.href=mail;});
-const labelFor=v=>v==='personal'?'Ask for the personal plan':v==='company'?'Ask about a company licence':'Request my free 15-day trial';
+const labelFor=v=>v==='company'?'Ask about a company licence':v==='question'?'Send my question':'Ask for the personal plan';
 const syncBtn=()=>{const pe=document.getElementById('f-plan'),b=document.getElementById('f-btn');
 if(pe&&b&&b.textContent.indexOf('✓')<0&&!b.disabled)b.textContent=labelFor(pe.value)};
 const pe0=document.getElementById('f-plan');
@@ -64,7 +64,9 @@ if(pe0){pe0.addEventListener('change',syncBtn);
 /* A pricing button links here already knowing which plan the reader wants.
    The plan travels in the query string, so the #request fragment still lands
    on the form on its own if this script never runs. The older
-   "#try?plan=x" links stay understood — they are out in the world. */
+   "#try?plan=x" links stay understood — they are out in the world. The
+   trial is not one of the choices: it is the app itself, for 14 days, and
+   an old ?plan=trial link simply lands on the personal plan. */
 const readPlan=()=>{
   const q=new URLSearchParams(location.search).get('plan')
     ||(location.hash.split('plan=')[1]||'');
@@ -88,7 +90,7 @@ if(p0){const legacy=location.hash.indexOf('request')<0;
   applyPlan(p0,legacy);}
 /* Clicking the same button while already on this page changes the url without
    reloading, so the choice has to be picked up here too — otherwise the form
-   still said "free 15-day trial" after the reader asked for the paid plan. */
+   still said "the personal plan" after the reader asked about a company. */
 document.querySelectorAll('a[data-plan]').forEach(a=>a.addEventListener('click',ev=>{
   const want=a.dataset.plan;
   if(!document.getElementById('request'))return;      /* another page · let it navigate */

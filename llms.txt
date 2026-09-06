@@ -25,7 +25,8 @@ Key facts
 - Pricing: two ways in. One engineer on one project pays $39 a month
   (or $390 a year, two months free) and gets every feature; a company pays
   one annual price for the workspace, with unlimited engineers and projects.
-  No per-seat bill, no per-module unlock. A free 15-day trial comes first, and
+  No per-seat bill, no per-module unlock. A free 14-day evaluation starts at
+  first launch, with no key and nothing to request; and
   AI tasks run on the customer's own AI key, so there is no per-question fee
 - Proven on a live mega-project: 72,000+ documents indexed, 5,300+ sign-offs,
   14 engineers in parallel (first-party measurements; method on /proven.html)
