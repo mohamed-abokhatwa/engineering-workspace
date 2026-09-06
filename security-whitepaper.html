@@ -130,7 +130,7 @@
   <div class="eyebrow">Security whitepaper &#183; version 1.2 &#183; 3 September 2026</div>
   <h1>What is built,<br>and how it is operated.</h1>
   <p class="sub" style="margin-top:16px">Engineering Root Solutions (ERS) &#183; Commercial Registration 7054208009 &#183;
-  Kingdom of Saudi Arabia. Applies to build r187 and later. This document is public and is maintained with the product:
+  Kingdom of Saudi Arabia. Applies to build r189 and later. This document is public and is maintained with the product:
   its claims are checked against the internal Statement of Applicability at each quarterly audit, and the version and
   date above change whenever a statement changes.</p>
   <div class="wp-tools noprint" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
@@ -152,7 +152,7 @@
     <p class="lead">Engineering Workspace is a desktop application for engineering correspondence, deliverables and
     design-workflow control. It installs on your own Windows PC or Mac and keeps everything &#8212; documents, the search
     index, the database, the audit trail &#8212; on that machine. ERS operates no service that receives your documents.
-    Sign-in is always required, roles are enforced by the server, administrators use two-factor authentication, secrets
+    Sign-in is always required, roles are enforced by the server, administrators of a shared workspace use two-factor authentication, secrets
     are encrypted per user, and every update and licence key is cryptographically signed and checked offline. ERS runs a
     structured information security programme built on the controls of ISO/IEC 27001:2022.
     This document says what is built and how it
@@ -211,7 +211,7 @@
       <tr><td>Sign-in always required</td><td>Including on the machine itself; there is no local bypass</td></tr>
       <tr><td>Passwords</td><td>Hashed with Argon2id; never logged; a minimum length is enforced</td></tr>
       <tr><td>Brute force</td><td>Sign-in is rate-limited per address and account with progressive lockout; failures are alerted to administrators</td></tr>
-      <tr><td>Two-factor</td><td>Administrators must enrol an authenticator app before their first session; with remote access on, every user does, and a company can require it for everyone regardless</td></tr>
+      <tr><td>Two-factor</td><td>Administrators of a shared workspace (a company licence, a network address or remote access) must enrol an authenticator app before their first session; with remote access on, every user does, and a company can require it for everyone regardless. On one computer it is optional</td></tr>
       <tr><td>Roles enforced by the server</td><td>Owner, admin, engineer, viewer, client, management. A client or management sign-in reaches the progress portal and nothing else &#8212; enforced in the API, not hidden in the interface</td></tr>
       <tr><td>Elevated actions</td><td>Installing updates, managing users and destructive actions ask for a fresh re-authentication</td></tr>
       <tr><td>Sessions</td><td>Signed, time-limited cookies (httpOnly, SameSite, Secure over HTTPS); a network session ends after a period of inactivity and never outlives its sign-in; changing a user's password or deactivating them revokes every session</td></tr>

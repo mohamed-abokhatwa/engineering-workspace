@@ -4,7 +4,7 @@
 > project's own contract, specifications, drawings and correspondence, checks
 > outgoing RFIs, letters, submittals and claims against them before they are
 > issued, and keeps registers, sign-off workflows, claims evidence, drawing
-> studios, 43 verified calculators and a company-controlled client portal
+> studios, 40 verified calculators and a company-controlled client portal
 > around one project record — on infrastructure the company owns.
 
 Key facts
