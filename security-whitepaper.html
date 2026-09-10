@@ -246,7 +246,7 @@
       <tr><td>In-app update packages</td><td>Ed25519 signature over the package digest, verified before installation; a tampered package refuses itself</td><td><span class="status live">Live</span></td></tr>
       <tr><td>Licence keys</td><td>Ed25519-signed payloads verified offline; a forged key does not verify</td><td><span class="status live">Live</span></td></tr>
       <tr><td>Website installers</td><td>Served over HTTPS; SHA-256 checksums published on the download page, in <code>SHA256SUMS.txt</code> and in <code>checksums.json</code></td><td><span class="status live">Live</span></td></tr>
-      <tr><td>Code-signing certificates for the website installers</td><td>Apple notarisation and Windows code signing</td><td><span class="status plan">In progress</span> &#8212; every installer ships with a published checksum in the meantime</td></tr>
+      <tr><td>Code-signing certificates for the website installers</td><td>Apple notarisation, and a Windows certificate that puts our verified name on the install dialog. Windows shows a SmartScreen notice for any installer it has not seen enough times, signed or not, so the Store remains the route with no notice at all</td><td><span class="status plan">In progress</span> &#8212; every installer ships with a published SHA-256 in the meantime</td></tr>
       <tr><td>Dependencies</td><td>Pinned; audited against public vulnerability databases before every release</td><td><span class="status live">Live</span></td></tr>
     </table></div>
   </div>
@@ -274,7 +274,7 @@
     <div class="caps" style="margin-top:18px">
       <div class="cap"><b>At every release</b><span>A dependency audit of both installer payloads against public vulnerability databases; a secret scan of the repository and release tooling; the role and position tests; a static verification of the packages; a review of every outbound connection against section 4.</span></div>
       <div class="cap"><b>The first full cycle &#8212; September 2026</b><span>Sign-in, sessions, cross-site protection, rate limiting and file handling, the mail-domain authentication records and the download endpoints were reviewed; everything the cycle touched is recorded in the product's change ledger.</span></div>
-      <div class="cap"><b>Next</b><span>Code-signing certificates for the website installers, and the next internal audit in December 2026. This section is updated as each lands.</span></div>
+      <div class="cap"><b>Next</b><span>Apple notarisation and a Windows code-signing certificate for the direct installers, and the next internal audit in December 2026. This section is updated as each lands.</span></div>
       <div class="cap"><b>On request, under NDA</b><span>The Statement of Applicability, the policy, the architecture and data-location pack, the backup and restore runbook, the update-signing design, and a review call with the person who built it.</span></div>
     </div>
   </div>
