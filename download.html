@@ -21,15 +21,15 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://engspace.app/download.html">
 <meta property="og:url" content="https://engspace.app/download.html">
-<link rel="icon" type="image/svg+xml" href="assets/mark.svg?v=28d1ee89">
+<link rel="icon" type="image/svg+xml" href="assets/mark.svg?v=b40e4e81">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css?v=28d1ee89">
+<link rel="stylesheet" href="assets/site.css?v=b40e4e81">
 </head>
 <body>
 <nav id="nav"><div class="wrap nav-in">
-  <a class="mark" href="index.html"><img src="assets/mark.svg?v=28d1ee89" alt="EW"><span class="mname">Engineering Workspace</span></a>
+  <a class="mark" href="index.html"><img src="assets/mark.svg?v=b40e4e81" alt="EW"><span class="mname">Engineering Workspace</span></a>
   <div class="nav-links">
     <a href="gate.html">Before you send</a>
     <a href="index.html#showcase" >The workspace</a>
@@ -100,7 +100,7 @@
 
 <section style="padding-top:150px">
   <div class="wrap">
-    <div class="eyebrow">Download &#183; r199 · updated 10 September 2026</div>
+    <div class="eyebrow">Download &#183; r200 · updated 10 September 2026</div>
     <h1 style="font-size:clamp(30px,4.6vw,44px);max-width:20ch">Install it on your machine.
       Your documents never leave it.</h1>
     <p class="sub" style="margin-top:14px">The complete workspace — search, registers, the
@@ -118,7 +118,10 @@
          border:1px solid var(--line);border-radius:16px;padding:28px">
       <h3 style="font-size:20px;margin-bottom:6px">Windows</h3>
       <div style="color:var(--ink3);font-size:12.5px;margin-bottom:18px">Installed and updated by the Store &#183; Windows 10/11, 64-bit</div>
-      <a class="btn btn-primary" style="width:100%;justify-content:center" href="https://apps.microsoft.com/detail/9PLHJ6V1ZGN5?mode=direct">Get it from the Microsoft Store</a>
+      <a class="msbadge" href="https://apps.microsoft.com/detail/9PLHJ6V1ZGN5?mode=direct" aria-label="Get it from Microsoft"><img
+             src="assets/ms-store-badge.svg" alt="Get it from Microsoft"
+             width="161" height="44" loading="lazy"></a>
+      <p style="color:var(--ink3);font-size:12.5px;margin-top:14px;line-height:1.55">The Store is the easiest way in: Microsoft signs and delivers the package, so there is no security warning to click past, and updates arrive by themselves. It is the same product, with the same 14-day evaluation.</p>
       <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line)">
           <div style="color:var(--ink3);font-size:12.5px;margin-bottom:10px">
             Or the direct installer &#183; 1.7 GB
@@ -133,7 +136,7 @@
             exactly the one we published. The wizard checks your machine before
             installing and needs no internet during setup.</p>
         </div>
-      <p style="color:var(--ink3);font-size:12.5px;margin-top:14px;line-height:1.55">The Store is the easiest way in: Microsoft signs and delivers the package, so there is no security warning to click past, and updates arrive by themselves. It is the same product, with the same 14-day evaluation.</p>
+      
     </div>
       
     <div class="dlcard" id="dl-mac" style="flex:1;min-width:300px;background:var(--panel);
@@ -141,6 +144,7 @@
       <h3 style="font-size:20px;margin-bottom:6px">macOS</h3>
       <div style="color:var(--ink3);font-size:12.5px;margin-bottom:18px">Installer package &#183; 1.7 GB &#183; Apple Silicon, macOS 13+</div>
       <a class="btn btn-primary" style="width:100%;justify-content:center" href="https://download.engspace.app/EngineeringWorkspace.pkg">Download for Mac</a>
+      
       
       <p style="color:var(--ink3);font-size:12.5px;margin-top:14px;line-height:1.55">A native installer wizard. On first launch, right-click the app and choose <b>Open</b> once &#8212; macOS asks this of any app it has not been told to trust yet. The checksum below confirms the file is exactly the one we published.</p>
     </div>
@@ -159,7 +163,7 @@
         full product is yours to judge, with nothing to activate.</div>
     </div>
 
-    <div class="block" id="verify" style="margin-top:44px;padding-top:0"><div class="eyebrow">Verify your download</div><h2 style="font-size:22px">Two checksums, one command.</h2><p class="sub" style="font-size:14px;margin-top:8px">Every website installer is published with its SHA-256 checksum. Compare it with the file you downloaded &#8212; the two must match exactly. The Store package carries Microsoft&#8217;s signature and needs no manual check. The same values are in <a href="SHA256SUMS.txt" style="color:var(--teal)">SHA256SUMS.txt</a> and <a href="checksums.json" style="color:var(--teal)">checksums.json</a>.</p><div class="caps" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))"><div class="cap"><b>EngineeringWorkspace-Setup.exe &#183; Windows</b><span><code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all;color:var(--gold2)">19c0da5112fd4cb8870e9d51ab9530ff805c5e88f378837f782f1b39bb734074</code><br>PowerShell: <code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all;color:var(--gold2)">Get-FileHash .\EngineeringWorkspace-Setup.exe -Algorithm SHA256</code></span></div><div class="cap"><b>EngineeringWorkspace.pkg &#183; macOS</b><span><code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all;color:var(--gold2)">884f4b346abe83e860809c9d38f7c41c55b6fdb55de8ce56cdb3dd24bb7844b8</code><br>Terminal: <code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all;color:var(--gold2)">shasum -a 256 ~/Downloads/EngineeringWorkspace.pkg</code></span></div></div></div>
+    <div class="block" id="verify" style="margin-top:44px;padding-top:0"><div class="eyebrow">Verify your download</div><h2 style="font-size:22px">Two checksums, one command.</h2><p class="sub" style="font-size:14px;margin-top:8px">Every website installer is published with its SHA-256 checksum. Compare it with the file you downloaded &#8212; the two must match exactly. The Store package carries Microsoft&#8217;s signature and needs no manual check. The same values are in <a href="SHA256SUMS.txt" style="color:var(--teal)">SHA256SUMS.txt</a> and <a href="checksums.json" style="color:var(--teal)">checksums.json</a>.</p><div class="caps" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))"><div class="cap"><b>EngineeringWorkspace-Setup.exe &#183; Windows</b><span><code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all;color:var(--gold2)">58c4ae3cac65b4958793b30888b99c7b7722e5fe61176234b73cdb8a3ec19aef</code><br>PowerShell: <code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all;color:var(--gold2)">Get-FileHash .\EngineeringWorkspace-Setup.exe -Algorithm SHA256</code></span></div><div class="cap"><b>EngineeringWorkspace.pkg &#183; macOS</b><span><code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all;color:var(--gold2)">0009d5e34ac8c322d51821821484b17780fce7fb33dd4c5cf5dcae1dbd79a7cb</code><br>Terminal: <code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;word-break:break-all;color:var(--gold2)">shasum -a 256 ~/Downloads/EngineeringWorkspace.pkg</code></span></div></div></div>
 
     <p style="margin-top:36px;color:var(--ink3);font-size:13px">
       Not sure your machine can carry it? <a href="requirements.html" style="color:var(--teal)">
@@ -167,9 +171,10 @@
       before placing a single file.</p>
 
     <div class="block" style="margin-top:56px">
-      <div class="eyebrow">What changed &#183; r193 &rarr; r199</div>
+      <div class="eyebrow">What changed &#183; r193 &rarr; r200</div>
       <h2 style="font-size:22px">Since the last website release.</h2>
       <div class="caps" style="margin-top:20px">
+        <div class="cap"><b>Tell us, without leaving the page</b><span>When something is wrong, or missing, or merely irritating, there is a <b>Tell me</b> button in the header of every page &mdash; and beside any job that failed, already carrying the error so you do not have to describe it. You see the whole message before it goes: your words, the version, the page you were on. Not a document, not a file name, not a folder, and no e-mail address unless you type one. Written with no internet, it waits and goes by itself when there is; if it still cannot, the app hands you the same text as an e-mail to send yourself.</span></div>
         <div class="cap"><b>Search that knows what a drawing number is</b><span>Type a drawing or document number the way it is written on the sheet &mdash; or the way you remember it, with spaces &mdash; and that document is answered exactly, not buried under everything that happens to share a digit. The trade&rsquo;s own words are understood in both languages: ask in Arabic about an English specification, or the reverse. And what governs moves the ranking: the current revision sits above the superseded one, and the result says which it is. A superseded drawing is never hidden &mdash; an engineer asking what a drawing used to say has a right to be answered.</span></div>
         <div class="cap"><b>It tells you when it is not at full strength</b><span>A search running on words alone, while the model is still loading, now says so on the page instead of quietly returning weaker answers. Every result carries why it is there, and a passage is shown with the rest of its section so a clause reads whole instead of stopping mid-sentence.</span></div>
         <div class="cap"><b>Documents that went in badly, said out loud</b><span>A scan that came out as OCR noise, a PDF that gave up forty characters a page &mdash; these used to count as successfully indexed and were invisible to every search, for ever, with nothing to tell you. Coverage now says which documents read badly and why, with <b>Read again</b> beside each one. A drawing sheet is not expected to read like a specification, and Arabic is never mistaken for noise.</span></div>
@@ -230,7 +235,7 @@
 <footer><div class="wrap">
   <div class="f-in">
     <div class="f-brand">
-      <span class="mark"><img src="assets/mark.svg?v=28d1ee89" style="width:26px;height:26px" alt="EW"> EngSpace</span>
+      <span class="mark"><img src="assets/mark.svg?v=b40e4e81" style="width:26px;height:26px" alt="EW"> EngSpace</span>
       <p>The Engineering Workspace — it stops you sending something wrong, and it keeps the
       record that proves you were right. Built inside the delivery of a mega-project, and it
       runs on infrastructure you own.</p>
@@ -268,6 +273,6 @@
     </div>
   </div>
 </div></footer>
-<script src="assets/site.js?v=28d1ee89"></script>
+<script src="assets/site.js?v=b40e4e81"></script>
 </body>
 </html>
