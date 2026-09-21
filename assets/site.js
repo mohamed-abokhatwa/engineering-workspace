@@ -41,21 +41,45 @@ document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>{
   document.getElementById('tp-'+b.dataset.t).classList.add('on');
 }));
 const tf=document.getElementById('trialForm');if(tf){
-tf.addEventListener('submit',ev=>{ev.preventDefault();
+/* r215 · a form like any other. The request goes straight to us — kept on
+   the licence service, mailed to the support inbox — and the page says so in
+   place. The visitor's own mail app is only the fallback for when our
+   service cannot be reached, so nothing typed here is ever lost. */
+const T0=Date.now();
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+tf.addEventListener('submit',async ev=>{ev.preventDefault();
 const $=id=>document.getElementById(id);
 const err=$('f-err'),ok=$('f-ok'),btn=$('f-btn');
-err.style.display='none';err.textContent='';
+if(btn.disabled)return;
+err.style.display='none';err.textContent='';ok.style.display='none';
 const name=$('f-name').value.trim(),email=$('f-email').value.trim();
 if(name.length<2){err.textContent='Please give your name.';err.style.display='block';return}
 if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){err.textContent='That email address does not look right.';err.style.display='block';return}
-if($('f-web').value)return;
 const planEl=$('f-plan');const plan=planEl?planEl.value:'personal';
 const company=$('f-company').value.trim(),role=$('f-role').value.trim(),msg=$('f-msg').value.trim();
 const subj=plan==='company'?'Company licence':plan==='question'?'A question':'Personal plan';
 const mail='mailto:support@engspace.app?subject='+encodeURIComponent(subj+' — '+name)+'&body='+encodeURIComponent('Name: '+name+'\nEmail: '+email+'\nCompany: '+company+'\nRole: '+role+'\nPlan: '+plan+'\n\n'+msg);
-ok.innerHTML='Your mail app is opening with the request written for you — press send and it reaches support@engspace.app. If nothing opened, <a href="'+mail+'" style="color:inherit;text-decoration:underline;font-weight:600">open it here</a>.';
-ok.style.display='block';btn.textContent='Ready to send ✓';
-location.href=mail;});
+const label=btn.textContent;
+btn.disabled=true;btn.textContent='Sending…';
+try{
+  const r=await fetch('https://lic.engspace.app/request',{method:'POST',
+    headers:{'content-type':'application/json'},
+    body:JSON.stringify({plan:plan,name:name,email:email,company:company,role:role,message:msg,
+      page:location.pathname,web:$('f-web').value,t:Date.now()-T0})});
+  const j=await r.json().catch(()=>({}));
+  if(r.ok&&j.ok){
+    ok.innerHTML='<b>Sent &#8212; thank you, '+esc(name.split(' ')[0])+'.</b> Your request has reached us. A person reads every one and answers you at <b>'+esc(email)+'</b>, usually within a day.';
+    ok.style.display='block';btn.textContent='Sent ✓';
+    tf.querySelectorAll('input,select,textarea').forEach(x=>{x.disabled=true});
+    return;}
+  if(r.status===400||r.status===429){
+    err.textContent=j.say||'Please check the form and send it again.';err.style.display='block';
+    btn.disabled=false;btn.textContent=label;return;}
+  throw new Error('service '+r.status);
+}catch(e){
+  ok.innerHTML='Our form could not reach us just now, so nothing was sent yet. <a href="'+mail+'" style="color:inherit;text-decoration:underline;font-weight:600">Send it from your mail app instead</a> &#8212; the request is already written out &#8212; or write to support@engspace.app.';
+  ok.style.display='block';btn.disabled=false;btn.textContent=label;}
+});
 const labelFor=v=>v==='company'?'Ask about a company licence':v==='question'?'Send my question':'Ask for the personal plan';
 const syncBtn=()=>{const pe=document.getElementById('f-plan'),b=document.getElementById('f-btn');
 if(pe&&b&&b.textContent.indexOf('✓')<0&&!b.disabled)b.textContent=labelFor(pe.value)};
