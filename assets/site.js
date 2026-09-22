@@ -138,7 +138,7 @@ document.querySelectorAll('[data-wa]').forEach(a=>{a.href=url;a.target='_blank';
 const fab=document.createElement('a');
 fab.className='wa-fab';fab.href=url;fab.target='_blank';fab.rel='noopener';
 fab.setAttribute('aria-label','Chat with the founder on WhatsApp');
-fab.innerHTML='<span class="wa-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12 3.4c-4.97 0-9 3.4-9 7.6 0 2.25 1.16 4.28 3 5.67l-.72 3.63 3.98-2.08c.87.2 1.8.3 2.74.3 4.97 0 9-3.4 9-7.52S16.97 3.4 12 3.4z"/><circle cx="8.3" cy="11" r="1.2" fill="#1C9F4D"/><circle cx="12" cy="11" r="1.2" fill="#1C9F4D"/><circle cx="15.7" cy="11" r="1.2" fill="#1C9F4D"/></svg></span>'
+fab.innerHTML='<span class="wa-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#0A100E" d="M12 3.4c-4.97 0-9 3.4-9 7.6 0 2.25 1.16 4.28 3 5.67l-.72 3.63 3.98-2.08c.87.2 1.8.3 2.74.3 4.97 0 9-3.4 9-7.52S16.97 3.4 12 3.4z"/><circle cx="8.3" cy="11" r="1.2" fill="#D2C79E"/><circle cx="12" cy="11" r="1.2" fill="#D2C79E"/><circle cx="15.7" cy="11" r="1.2" fill="#D2C79E"/></svg></span>'
  +'<span class="wa-t"><b><span class="wa-long">Chat on </span>WhatsApp</b><small class="wa-sub">The founder &#183; KSA working hours</small></span>';
 fab.addEventListener('click',count);
 document.body.appendChild(fab);
