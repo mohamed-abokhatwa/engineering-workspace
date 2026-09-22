@@ -122,3 +122,30 @@ document.querySelectorAll('a[data-plan]').forEach(a=>a.addEventListener('click',
   history.replaceState(null,'','?plan='+want+'#request');
   applyPlan(want,true);}));
 syncBtn();}}
+
+/* r215 · WhatsApp. A plain link to a chat with the founder: no widget, no
+   third-party script. The first line is written for the visitor and names the
+   page they were reading. The number is put together here, so it is not in
+   the HTML for address harvesters. The button arrives after a moment and
+   steps aside while the licence request form is on screen, so the two never
+   compete. */
+(()=>{const n=['966','54','170','6700'].join('');
+const pg=location.pathname.split('/').pop().replace(/\.html$/,'');
+const at='engspace.app'+(pg&&pg!=='index'?'/'+pg:'');
+const url='https://wa.me/'+n+'?text='+encodeURIComponent('Hello, I have a question about Engineering Workspace ('+at+').');
+const count=()=>{try{if(window.gtag)gtag('event','whatsapp_click',{page_path:location.pathname})}catch(e){}};
+document.querySelectorAll('[data-wa]').forEach(a=>{a.href=url;a.target='_blank';a.rel='noopener';a.hidden=false;a.addEventListener('click',count)});
+const fab=document.createElement('a');
+fab.className='wa-fab';fab.href=url;fab.target='_blank';fab.rel='noopener';
+fab.setAttribute('aria-label','Chat with the founder on WhatsApp');
+fab.innerHTML='<span class="wa-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12 3.4c-4.97 0-9 3.4-9 7.6 0 2.25 1.16 4.28 3 5.67l-.72 3.63 3.98-2.08c.87.2 1.8.3 2.74.3 4.97 0 9-3.4 9-7.52S16.97 3.4 12 3.4z"/><circle cx="8.3" cy="11" r="1.2" fill="#1C9F4D"/><circle cx="12" cy="11" r="1.2" fill="#1C9F4D"/><circle cx="15.7" cy="11" r="1.2" fill="#1C9F4D"/></svg></span>'
+ +'<span class="wa-t"><b><span class="wa-long">Chat on </span>WhatsApp</b><small class="wa-sub">The founder &#183; KSA working hours</small></span>';
+fab.addEventListener('click',count);
+document.body.appendChild(fab);
+let away=false,ready=false;
+const show=()=>fab.classList.toggle('on',ready&&!away);
+setTimeout(()=>{ready=true;show()},900);
+const rq=document.getElementById('request');
+if(rq&&'IntersectionObserver' in window)
+  new IntersectionObserver(es=>{away=es[0].isIntersecting;show()},{threshold:.12}).observe(rq);
+})();
