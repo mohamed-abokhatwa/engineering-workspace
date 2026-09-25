@@ -6,6 +6,9 @@
 > issued, and keeps registers, sign-off workflows, claims evidence, drawing
 > studios, 40 verified calculators and a company-controlled client portal
 > around one project record — on infrastructure the company owns.
+> The assistant also makes presentations (PowerPoint with native charts and
+> speaker notes, on the company's own template if given; an HTML deck on
+> request), in English and Arabic side by side when asked.
 
 Key facts
 - Product: Engineering Workspace (brand: EngSpace) — https://engspace.app

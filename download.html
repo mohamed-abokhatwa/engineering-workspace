@@ -31,7 +31,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=d6cf7e8e">
+<link rel="stylesheet" href="assets/site.css?v=7c752886">
 </head>
 <body>
 <nav id="nav"><div class="wrap nav-in">
@@ -106,7 +106,7 @@
 
 <section style="padding-top:150px">
   <div class="wrap">
-    <div class="eyebrow">Download &#183; r216 · updated 24 September 2026</div>
+    <div class="eyebrow">Download &#183; r220 · updated 25 September 2026</div>
     <h1 class="dl-h1">Install it on your machine.
       Your documents never leave it.</h1>
     <p class="sub" style="margin-top:14px">The complete workspace — search, registers, the
@@ -165,7 +165,7 @@
         full product is yours to judge, with nothing to activate.</div>
     </div>
 
-    <div class="block" id="verify" style="margin-top:44px;padding-top:0"><div class="eyebrow">Verify your download</div><h2 class="h2b">Two checksums, one command.</h2><p class="sub" style="margin-top:8px">Every website installer is published with its SHA-256 checksum. Compare it with the file you downloaded &#8212; the two must match exactly. The Microsoft Store package carries Microsoft&#8217;s signature and needs no manual check. The same values are in <a href="SHA256SUMS.txt" style="color:var(--teal)">SHA256SUMS.txt</a> and <a href="checksums.json" style="color:var(--teal)">checksums.json</a>.</p><div class="caps" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))"><div class="cap"><b>EngineeringWorkspace-Setup.exe &#183; Windows</b><span><code class="sum">2562fdb55562fdf8c21559cc7fe262164c53a85139de43e3bcfc3270768d5770</code><span class="cmd">PowerShell: <code>Get-FileHash .\EngineeringWorkspace-Setup.exe -Algorithm SHA256</code></span></span></div><div class="cap"><b>EngineeringWorkspace.pkg &#183; macOS</b><span><code class="sum">eba55f227ec664d6ae848eb1490488bf4627450fe32ee6716cf3004a8e164d86</code><span class="cmd">Terminal: <code>shasum -a 256 ~/Downloads/EngineeringWorkspace.pkg</code></span></span></div></div></div>
+    <div class="block" id="verify" style="margin-top:44px;padding-top:0"><div class="eyebrow">Verify your download</div><h2 class="h2b">Two checksums, one command.</h2><p class="sub" style="margin-top:8px">Every website installer is published with its SHA-256 checksum. Compare it with the file you downloaded &#8212; the two must match exactly. The Microsoft Store package carries Microsoft&#8217;s signature and needs no manual check. The same values are in <a href="SHA256SUMS.txt" style="color:var(--teal)">SHA256SUMS.txt</a> and <a href="checksums.json" style="color:var(--teal)">checksums.json</a>.</p><div class="caps" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))"><div class="cap"><b>EngineeringWorkspace-Setup.exe &#183; Windows</b><span><code class="sum">e778b25087cc332ec3672bf49e41424fad894a8a9cfad8da8d8006984da40ad4</code><span class="cmd">PowerShell: <code>Get-FileHash .\EngineeringWorkspace-Setup.exe -Algorithm SHA256</code></span></span></div><div class="cap"><b>EngineeringWorkspace.pkg &#183; macOS</b><span><code class="sum">71abad35e234c7ffbea6660bfc5afb751b091991cbb3a6775d9117c4e2d87a13</code><span class="cmd">Terminal: <code>shasum -a 256 ~/Downloads/EngineeringWorkspace.pkg</code></span></span></div></div></div>
 
     <p style="margin-top:36px;color:var(--ink3);font-size:13px">
       Not sure your machine can carry it? <a href="requirements.html" style="color:var(--teal)">
@@ -173,15 +173,16 @@
       before placing a single file.</p>
 
     <div class="block" style="margin-top:56px">
-      <div class="eyebrow">What changed &#183; r215 &rarr; r216</div>
+      <div class="eyebrow">What changed &#183; r216 &rarr; r220</div>
       <h2 class="h2b">Since the last website release.</h2>
       <div class="caps" style="margin-top:20px">
-        <div class="cap"><b>If the workspace ever stops, the app brings it back</b><span>The app window never shows a browser error page again. If the workspace server on your computer stops, the window says so, starts it again and returns to your work by itself; if it cannot start, the same card shows the last lines of the log with Try again and Show the log. A page that fails to load while the server is away waits for it instead of reloading into nothing.</span></div>
-        <div class="cap"><b>It brings its own C++ runtime</b><span>A computer whose copy of the Microsoft C++ runtime is older than the app&rsquo;s programs need used to stop the workspace seconds after it opened, silently. The app now carries the runtime it needs beside its own programs, on every machine, and its log names the copy it is using.</span></div>
-        <div class="cap"><b>Coverage counts the whole library</b><span>&ldquo;These went in badly&rdquo; now counts every document, not the two hundred rows it happened to show, and a failed drawing no longer appears twice. Documents needing attention are grouped by reason with what you can do about each; a failure that will never change &mdash; a drawing the converter cannot open &mdash; can be accepted so it stops counting. A document the project record points at but the library no longer has can be relinked with one press when it is found under another path, or forgotten; nothing is deleted.</span></div>
-        <div class="cap"><b>Search by meaning, always</b><span>The search model loads from the copy that ships with the app. If it ever cannot, the app says so plainly instead of quietly searching by keywords only, and a seeded model folder that was left incomplete is copied again from the bundle.</span></div>
-        <div class="cap"><b>Easier to read</b><span>The paragraph at the top of each card spans the card instead of sitting in its left half. On Windows, scans are read by the reader built into Windows, as intended; a package it needed was missing.</span></div>
-        <div class="cap"><b>On the Mac, the drawing converter works out of sight</b><span>Drawings the built-in converter cannot read are handed to the optional ODA File Converter with no window flashing on screen, in a second instead of twelve, and its reasons come back in its own words.</span></div>
+        <div class="cap"><b>Presentations, made by the assistant</b><span>Ask for a deck and the assistant makes it: a PowerPoint file with native charts you can still edit, speaker notes and headline figures, in the workspace&rsquo;s own design or on your company&rsquo;s template, with a PDF of the same slides; or the whole deck as one web page that plays in any browser. Arabic reads right to left, and the Daily report and the progress report export as slides too.</span></div>
+        <div class="cap"><b>English and Arabic side by side</b><span>A deck can be bilingual: English on the left and Arabic on the right of every slide, block for block, with charts, tables and headline figures labelled in both languages and standard references left as written. Ask the assistant for one, or press Bilingual on any deck in Outputs, even one edited in PowerPoint since.</span></div>
+        <div class="cap"><b>The PDF Studio&rsquo;s page tools</b><span>Arrange, split and insert pages, package drawings for a transmittal with a cover and a stamp, make a scan searchable, redact, crop, reduce, export pages as pictures, correct a run of text and sign. Every result is a new file, the original is untouched, and every output is checked in the engines people read PDFs with. Pages from office scanners now show in the studio.</span></div>
+        <div class="cap"><b>A new look</b><span>Deep emerald and champagne gold by night, ivory by day, a serif for titles and figures, and the rooms numbered in the side bar. The same crest is now on the app icon, the installers and the Store tiles.</span></div>
+        <div class="cap"><b>Search reads the whole deck</b><span>The library reads everything a PowerPoint holds, not only its text boxes: grouped shapes, tables, chart titles, categories and series, SmartArt and the speaker notes. It reads a web page without its style sheet or script. Decks and pages already in the library are read again once, by themselves.</span></div>
+        <div class="cap"><b>Arabic, dated properly</b><span>In Arabic, dates read naturally (<bdi lang="ar">&laquo;29 أكتوبر 2026&raquo;</bdi>, where they used to come out as &ldquo;Oct 2026 29&rdquo;). The Dashboard&rsquo;s lines and the assistant&rsquo;s progress lines that stayed in English are translated.</span></div>
+        <div class="cap"><b>Answers from your documents, even without AI</b><span>When no AI account answers, the assistant and Ask show the passages of your documents that match the question as numbered cards, each with its document and page one click away. When an AI service sends back nothing, the answer says so plainly, and that nothing is wrong on your side. Indexing stays light on a computer with less than 32 GB of memory.</span></div>
       </div>
     </div>
   </div>
@@ -239,6 +240,6 @@
     </div>
   </div>
 </div></footer>
-<script src="assets/site.js?v=d6cf7e8e"></script>
+<script src="assets/site.js?v=7c752886"></script>
 </body>
 </html>
