@@ -11,25 +11,31 @@
   gtag('config', 'G-5CB1JQXHBM');
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#06100E">
+<script>document.documentElement.className+=' js'</script>
 <title>Security whitepaper — EngSpace · Engineering Workspace</title>
 <meta name="description" content="What is built and how it is operated: where data lives, the complete list of outbound connections, identity and roles, signed updates, backups, shared responsibility, and the security programme built on ISO/IEC 27001:2022 behind it.">
 <meta property="og:title" content="Security whitepaper — EngSpace · Engineering Workspace">
 <meta property="og:description" content="What is built and how it is operated: where data lives, the complete list of outbound connections, identity and roles, signed updates, backups, shared responsibility, and the security programme built on ISO/IEC 27001:2022 behind it.">
-<meta property="og:image" content="https://engspace.app/img/dashboard.webp">
+<meta property="og:image" content="https://engspace.app/img/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Engineering Workspace — it stops you sending something wrong.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="EngSpace · Engineering Workspace">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://engspace.app/img/og-card.jpg">
 <link rel="canonical" href="https://engspace.app/security-whitepaper.html">
 <meta property="og:url" content="https://engspace.app/security-whitepaper.html">
-<link rel="icon" type="image/svg+xml" href="assets/mark.svg?v=fe9de938">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css?v=fe9de938">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css?v=d6cf7e8e">
 </head>
 <body>
 <nav id="nav"><div class="wrap nav-in">
-  <a class="mark" href="index.html"><img src="assets/mark.svg?v=fe9de938" alt="EW"><span class="mname">Engineering Workspace</span></a>
+  <a class="mark" href="index.html"><span class="crest" aria-hidden="true"><span><b>EW</b></span></span><span class="mname"><small>EngSpace</small><span>Engineering Workspace</span></span></a>
   <div class="nav-links">
     <a href="gate.html">Before you send</a>
     <a href="index.html#showcase" >The workspace</a>
@@ -99,30 +105,27 @@
 </div>
 
 <style>
-.wp h2{font-size:23px;margin:0 0 8px}
-.wp h3{font-size:15px;margin:22px 0 6px}
-.wp p{color:var(--ink2);font-size:14.5px;max-width:760px}
-.wp .lead{color:var(--ink);font-size:16px;max-width:820px}
-.wp .ptable td:first-child{color:var(--ink);font-weight:600;white-space:nowrap}
-.wp .ptable td{font-size:13.2px;color:var(--ink2)}
-.wp .ptable td code,.wp p code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--gold2)}
-.wp-toc{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;margin-top:18px;max-width:900px}
-.wp-toc a{color:var(--teal);white-space:nowrap}
-.wp-tools button.btn{background:transparent;color:var(--ink2);font:inherit;font-size:13px;font-weight:600;line-height:inherit}
-.wp-tools button.btn:hover{color:var(--ink);background:var(--panel)}
-.wp .status{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:6px;padding:2px 7px;border:1px solid var(--line)}
-.wp .live{color:var(--teal2)} .wp .plan{color:var(--gold)}
-.wp ul.qa{list-style:none;padding:0;margin:18px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
-.wp ul.qa li{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:13px 15px;font-size:13px;color:var(--ink2)}
-.wp ul.qa li b{display:block;color:var(--ink);font-size:13px;margin-bottom:4px}
-.wp .block{padding:34px 0;border-bottom:1px solid var(--line)}
+.wp h2{font-size:clamp(28px,2.8vw,36px);margin:0 0 12px}
+.wp h3{font-family:var(--sans);font-size:11px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin:28px 0 8px}
+.wp p{color:var(--ink2);font-size:16px;max-width:760px;line-height:1.75}
+.wp .lead{color:var(--ink);font-size:18px;max-width:820px}
+.wp .ptable td:first-child{color:var(--ink);font-weight:500;white-space:nowrap}
+.wp .ptable td{font-size:14.5px;color:var(--ink2)}
+.wp .ptable td code,.wp p code{font-size:13px;color:var(--gold2)}
+.wp .status{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;border-radius:999px;padding:2px 10px;border:1px solid var(--gold-line);background:none;box-shadow:none}
+.wp .status.live{color:var(--teal2)}
+.wp .status.plan{color:var(--gold);position:static;flex-direction:initial;margin:0}
+.wp ul.qa{list-style:none;padding:0;margin:20px 0 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 44px}
+.wp ul.qa li{border-bottom:1px solid var(--gold-edge);padding:16px 0;font-size:15px;color:var(--ink2);line-height:1.65}
+.wp ul.qa li b{display:block;font-family:var(--serif);color:var(--ink);font-size:19px;font-weight:600;margin-bottom:4px}
+.wp .block{padding:44px 0;border-bottom:1px solid var(--gold-edge)}
+.wp .block:first-child{padding-top:0}
+@media(max-width:760px){.wp ul.qa{grid-template-columns:1fr}.wp .ptable td:first-child{white-space:normal}}
 @media print{
-  :root{--bg:#fff;--bg2:#fff;--panel:#fff;--panel2:#fff;--line:#bbb;--ink:#111;--ink2:#333;--ink3:#555;--teal:#0b6b5f;--teal2:#0b6b5f;--gold:#6b5d2a;--gold2:#6b5d2a}
   nav,footer,.ctaband,.pn,.noprint{display:none!important}
-  body{background:#fff;color:#111;font-size:11.5pt}
-  .phero{padding:0 0 10px}
+  body{font-size:11.5pt}
   .wp .block{padding:16px 0;break-inside:avoid}
-  a{color:#111;text-decoration:none}
+  a{color:#13241F;text-decoration:none}
 }
 </style>
 <header class="phero"><div class="wrap">
@@ -145,7 +148,7 @@
     <a href="#s10">10 Shared responsibility</a><a href="#s11">11 For your IT department</a><a href="#s12">12 Reporting a vulnerability</a>
   </div>
 </div></header>
-<div class="wrap wp">
+<div class="wrap wp paper">
 
   <div class="block" id="s1">
     <div class="eyebrow">1 &#183; In one paragraph</div>
@@ -329,7 +332,7 @@
 <footer><div class="wrap">
   <div class="f-in">
     <div class="f-brand">
-      <span class="mark"><img src="assets/mark.svg?v=fe9de938" style="width:26px;height:26px" alt="EW"> EngSpace</span>
+      <span class="mark"><span class="crest" aria-hidden="true"><span><b>EW</b></span></span><span class="mname"><small>EngSpace</small><span>Engineering Workspace</span></span></span>
       <p>The Engineering Workspace — it stops you sending something wrong, and it keeps the
       record that proves you were right. Built inside the delivery of a mega-project, and it
       runs on infrastructure you own.</p>
@@ -368,6 +371,6 @@
     </div>
   </div>
 </div></footer>
-<script src="assets/site.js?v=fe9de938"></script>
+<script src="assets/site.js?v=d6cf7e8e"></script>
 </body>
 </html>
