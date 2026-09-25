@@ -33,6 +33,21 @@ document.querySelectorAll('.yt[data-yt]').forEach(box=>{
   },{once:false});
   box.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();box.click()}});
 });
+/* r220 · the loupe: a product picture opens at its own size; Escape, the
+   button or a press anywhere closes it and gives focus back */
+document.querySelectorAll('.shot img,.frame img').forEach(im=>{
+  im.tabIndex=0;im.setAttribute('role','button');
+  const open=()=>{const back=document.activeElement;const o=document.createElement('div');o.className='loupe';
+    o.setAttribute('role','dialog');o.setAttribute('aria-label',im.alt||'Picture');
+    const big=new Image();big.src=im.currentSrc||im.src;big.alt=im.alt||'';
+    const x=document.createElement('button');x.type='button';x.setAttribute('aria-label','Close');x.textContent='×';
+    o.append(big,x);document.body.appendChild(o);x.focus();
+    const close=()=>{o.remove();removeEventListener('keydown',key);if(back)back.focus()};
+    const key=e=>{if(e.key==='Escape')close()};
+    o.addEventListener('click',close);addEventListener('keydown',key)};
+  im.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()});
+  im.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});
+});
 document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.tabbtn').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.tabpanel').forEach(x=>x.classList.remove('on'));
