@@ -10,6 +10,8 @@
 > speaker notes, on the company's own template if given; an HTML deck on
 > request), in English and Arabic side by side when asked.
 > A unit converter covers 48 engineering quantities and 268 units, with the formula shown.
+> A register can follow the Excel file it is kept in (on the computer, or a
+> SharePoint or OneDrive link) and read each new revision by itself.
 
 Key facts
 - Product: Engineering Workspace (brand: EngSpace) — https://engspace.app
