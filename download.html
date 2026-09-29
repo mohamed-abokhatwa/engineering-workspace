@@ -106,7 +106,7 @@
 
 <section style="padding-top:150px">
   <div class="wrap">
-    <div class="eyebrow">Download &#183; r236 · updated 28 September 2026</div>
+    <div class="eyebrow">Download &#183; r238 · updated 29 September 2026</div>
     <h1 class="dl-h1">Install it on your machine.
       Your documents never leave it.</h1>
     <p class="sub" style="margin-top:14px">The complete workspace — search, registers, the
@@ -165,7 +165,7 @@
         full product is yours to judge, with nothing to activate.</div>
     </div>
 
-    <div class="block" id="verify" style="margin-top:44px;padding-top:0"><div class="eyebrow">Verify your download</div><h2 class="h2b">Two checksums, one command.</h2><p class="sub" style="margin-top:8px">Every website installer is published with its SHA-256 checksum. Compare it with the file you downloaded &#8212; the two must match exactly. The Microsoft Store package carries Microsoft&#8217;s signature and needs no manual check. The same values are in <a href="SHA256SUMS.txt" style="color:var(--teal)">SHA256SUMS.txt</a> and <a href="checksums.json" style="color:var(--teal)">checksums.json</a>.</p><div class="caps" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))"><div class="cap"><b>EngineeringWorkspace-Setup.exe &#183; Windows</b><span><code class="sum">834d38b5d5fc6111f526f19c2f7c71987ac324c6213743fdaae9657d9ba35dd6</code><span class="cmd">PowerShell: <code>Get-FileHash .\EngineeringWorkspace-Setup.exe -Algorithm SHA256</code></span></span></div><div class="cap"><b>EngineeringWorkspace.pkg &#183; macOS</b><span><code class="sum">271eb6653a5195ed2f03b4fe67460e1c178fc7ede6741beb43e88a9182acf651</code><span class="cmd">Terminal: <code>shasum -a 256 ~/Downloads/EngineeringWorkspace.pkg</code></span></span></div></div></div>
+    <div class="block" id="verify" style="margin-top:44px;padding-top:0"><div class="eyebrow">Verify your download</div><h2 class="h2b">Two checksums, one command.</h2><p class="sub" style="margin-top:8px">Every website installer is published with its SHA-256 checksum. Compare it with the file you downloaded &#8212; the two must match exactly. The Microsoft Store package carries Microsoft&#8217;s signature and needs no manual check. The same values are in <a href="SHA256SUMS.txt" style="color:var(--teal)">SHA256SUMS.txt</a> and <a href="checksums.json" style="color:var(--teal)">checksums.json</a>.</p><div class="caps" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))"><div class="cap"><b>EngineeringWorkspace-Setup.exe &#183; Windows</b><span><code class="sum">5069d0430b9f3e15bd28cd59c2145f530490661de2bedabd765a9b2fb22cb108</code><span class="cmd">PowerShell: <code>Get-FileHash .\EngineeringWorkspace-Setup.exe -Algorithm SHA256</code></span></span></div><div class="cap"><b>EngineeringWorkspace.pkg &#183; macOS</b><span><code class="sum">1032814effa6a62514018abdeac37199c15989213117de6ea60073adf3826fc5</code><span class="cmd">Terminal: <code>shasum -a 256 ~/Downloads/EngineeringWorkspace.pkg</code></span></span></div></div></div>
 
     <p style="margin-top:36px;color:var(--ink3);font-size:13px">
       Not sure your machine can carry it? <a href="requirements.html" style="color:var(--teal)">
@@ -173,15 +173,11 @@
       before placing a single file.</p>
 
     <div class="block" style="margin-top:56px">
-      <div class="eyebrow">What changed &#183; r226 &rarr; r236</div>
+      <div class="eyebrow">What changed &#183; r236 &rarr; r238</div>
       <h2 class="h2b">Since the last website release.</h2>
       <div class="caps" style="margin-top:20px">
-        <div class="cap"><b>Registers that follow their Excel file</b><span>Link a register to the Excel file it is kept in &#8212; a file on this computer (a SharePoint library synced by OneDrive counts) or a SharePoint or OneDrive link &#8212; and it follows that file: the same file each time it is saved, or the newest revision in its folder (R1 to R2, Rev&nbsp;B to C, P01 to C01, or a date in the name). Only what the file changed is written, the register&rsquo;s own notes and columns stay, and a row no longer in the file is counted and shown, never deleted.</span></div>
-        <div class="cap"><b>A status read for what it means</b><span>“Replied”, “Replied with Delay”, “Approved as noted” and “Code&nbsp;A” count as answered; “Not replied” and “Pending closure” stay open. One reading serves every count &#8212; the registers, the Dashboard, the morning brief, the analytics and the claims clock &#8212; and a register can read any status its own way. A log dropped into Intake is known for what it is and brought in as rows, never as one record.</span></div>
-        <div class="cap"><b>The whole mailbox, within reach</b><span>The Mail page holds up to 1,000 conversations (500 from Outlook on a Mac): the newest at once, older mail read in the background. A search reaches the whole mailbox through Outlook, Microsoft&nbsp;365 or Thunderbird. Follow-ups are rows you tick and act on together, with a search that finds the quiet threads too.</span></div>
-        <div class="cap"><b>The design chain, drawn as a rail</b><span>Each step of a sign-off chain is a station on one rail, sealed with the mark of what happens there: gold where documents are waiting, red where one is late, one bracket over steps that run at the same time. The same rail shows where each revision stands, and the chain&rsquo;s plain-words reading is in Arabic too.</span></div>
-        <div class="cap"><b>The Library and the registers&rsquo; analysis, in the new look</b><span>Every document that needs attention is in one list with its reason, searched, ticked and accepted together; Editions says “No copy in the library” in words; Compare keeps the library under both slots. The registers&rsquo; Analytics and Expected variations count every open item, not only the first page of them.</span></div>
-        <div class="cap"><b>Smaller things</b><span>The app&rsquo;s own right-click menu everywhere &#8212; copying keeps an e-mail&rsquo;s tables, and the words you select can be searched in the project or asked about; one title per page; a dropdown that looks like a dropdown; times read right in any time zone, so a new review&rsquo;s clock starts at 0:00.</span></div>
+        <div class="cap"><b>Follow-ups within reach, and who answered</b><span>With no mailbox connected &#8212; signed out, or not set up yet &#8212; the threads the workspace tracks stay one tab away on the Mail page: reminders are drafted, threads snoozed or closed, and the board says plainly that replies are looked for once a mailbox is connected. Who answered a thread has a line of their own, with the time under it.</span></div>
+        <div class="cap"><b>Every choice whole, in both languages</b><span>A dropdown is as wide as its longest choice in the language on the screen, so nothing is cut in Arabic &#8212; from the Follow-ups weekend to a register&rsquo;s rules and the Scope filters &#8212; and a register&rsquo;s assignment rules read in Arabic too.</span></div>
       </div>
     </div>
   </div>
