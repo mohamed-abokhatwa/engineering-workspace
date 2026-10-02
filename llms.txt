@@ -12,6 +12,9 @@
 > A unit converter covers 48 engineering quantities and 268 units, with the formula shown.
 > A register can follow the Excel file it is kept in (on the computer, or a
 > SharePoint or OneDrive link) and read each new revision by itself.
+> Analytics turn any register, the programme, the claims ledger or mail
+> follow-ups into figures and charts, chosen from templates or written as an
+> Excel-style formula.
 
 Key facts
 - Product: Engineering Workspace (brand: EngSpace) — https://engspace.app
