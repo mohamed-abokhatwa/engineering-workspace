@@ -189,10 +189,10 @@
   <div class="block" id="s4">
     <div class="eyebrow">4 &#183; What can leave the machine</div>
     <h2>The complete list.</h2>
-    <p>Nothing in this table is on unless you or the licence say so. There is no telemetry.</p>
+    <p>Nothing in this table is on unless you or the licence say so, except the daily update check, which only asks for the list of updates. There is no telemetry.</p>
     <div style="overflow-x:auto;margin-top:14px"><table class="ptable">
       <thead><tr><th>Connection</th><th>When</th><th>What is sent</th><th>Who receives it</th></tr></thead>
-      <tr><td>Update check</td><td>When an administrator presses &#8220;Check for updates&#8221; in Settings (Store installs update through the Store)</td><td>A plain request for a small version file; nothing about you</td><td>engspace.app</td></tr>
+      <tr><td>Update check</td><td>Once a day, and when an administrator presses &#8220;Check now&#8221; in Settings (Store installs update through the Store)</td><td>A plain request for the signed list of updates, then the new version itself when there is one; nothing about you</td><td>download.engspace.app</td></tr>
       <tr><td>Licence check-in</td><td>Daily, for managed licences</td><td>Application version, a machine code, document <b>counts</b> &#8212; never content</td><td>ERS</td></tr>
       <tr><td>AI provider</td><td>Only after you paste your own provider key in Settings, and only for the task you run</td><td>The question and the passages or documents chosen for that task, under your own account and terms</td><td>The provider you chose</td></tr>
       <tr><td>Mail, calendar, notes</td><td>Only when you sign in or connect a local reader</td><td>Read into the workspace; only a message you explicitly send leaves your own mailbox</td><td>Your own mail platform</td></tr>
@@ -247,7 +247,7 @@
     <div style="overflow-x:auto"><table class="ptable">
       <thead><tr><th>Artefact</th><th>Protection</th><th>Status</th></tr></thead>
       <tr><td>Microsoft Store package</td><td>Signed by Microsoft; installed and updated by the Store</td><td><span class="status live">Live</span></td></tr>
-      <tr><td>In-app update packages</td><td>Ed25519 signature over the package digest, verified before installation; a tampered package refuses itself</td><td><span class="status live">Live</span></td></tr>
+      <tr><td>In-app update packages</td><td>Ed25519 signature over the package digest, verified before installation; a tampered package refuses itself. The daily list of updates is signed by the same key, and a new installer is checked against the SHA-256 it names before it runs</td><td><span class="status live">Live</span></td></tr>
       <tr><td>Licence keys</td><td>Ed25519-signed payloads verified offline; a forged key does not verify</td><td><span class="status live">Live</span></td></tr>
       <tr><td>Website installers</td><td>Served over HTTPS; SHA-256 checksums published on the download page, in <code>SHA256SUMS.txt</code> and in <code>checksums.json</code></td><td><span class="status live">Live</span></td></tr>
       <tr><td>Code-signing certificates for the website installers</td><td>Apple notarisation, and a Windows certificate that puts our verified name on the install dialog. Windows shows a SmartScreen notice for any installer it has not seen enough times, signed or not, so the Store remains the route with no notice at all</td><td><span class="status plan">In progress</span> &#8212; every installer ships with a published SHA-256 in the meantime</td></tr>
