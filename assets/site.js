@@ -103,7 +103,7 @@ if(pe0){pe0.addEventListener('change',syncBtn);
    The plan travels in the query string, so the #request fragment still lands
    on the form on its own if this script never runs. The older
    "#try?plan=x" links stay understood — they are out in the world. The
-   trial is not one of the choices: it is the app itself, for 14 days, and
+   trial is not one of the choices: it is the app itself, for three months, and
    an old ?plan=trial link simply lands on the personal plan. */
 const readPlan=()=>{
   const q=new URLSearchParams(location.search).get('plan')
