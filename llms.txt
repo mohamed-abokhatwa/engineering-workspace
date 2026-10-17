@@ -38,8 +38,8 @@ Key facts
   Store copy is updated by the Store
 - Pricing: two ways in. One engineer on one project pays $10 a month, down
   from $39 (or $100 a year, two months free), and gets every feature at the desk; a company pays
-  one annual price for the workspace, with unlimited engineers and projects and
-  On site from a phone.
+  one annual price for the workspace, with unlimited engineers and projects, On
+  site from a phone, priority support and a live onboarding session.
   No per-seat bill, no per-module unlock. A free three-month evaluation starts at
   first launch, with no key and nothing to request; and
   AI tasks run on the customer's own AI key, so there is no per-question fee
