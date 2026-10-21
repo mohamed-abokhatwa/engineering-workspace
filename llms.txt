@@ -36,6 +36,9 @@ Key facts
 - Updates: a copy from the download page finds its updates by itself, checks the
   publisher's signature, and installs the small ones on its own; a Microsoft
   Store copy is updated by the Store
+- MCP both ways: the assistant uses the company's other systems that offer an
+  MCP server (connected in Settings → Connections), and other AI assistants
+  search and read the workspace through its own MCP server (a token of its own)
 - Pricing: two ways in. One engineer on one project pays $10 a month, down
   from $39 (or $100 a year, two months free), and gets every feature at the desk; a company pays
   one annual price for the workspace, with unlimited engineers and projects, On
