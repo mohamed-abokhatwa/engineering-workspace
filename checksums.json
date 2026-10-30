@@ -1,14 +1,14 @@
 {
  "EngineeringWorkspace-Setup-win64.exe": {
-  "bytes": 1813602880,
-  "mtime": 1792780434,
+  "bytes": 1914786426,
+  "mtime": 1793370000,
   "public_name": "EngineeringWorkspace-Setup.exe",
-  "sha256": "3c2ba0f06a8414516f96bb3f162eaf69a47b158dfbf9a529d67267a30399a98f"
+  "sha256": "5f7fb0036e0678d55335cfc75967db8c455419d381ea3a7319739ac98d791e31"
  },
- "EngineeringWorkspace-r258.pkg": {
-  "bytes": 1835188221,
-  "mtime": 1792782599,
+ "EngineeringWorkspace-r260.pkg": {
+  "bytes": 1936824764,
+  "mtime": 1793370499,
   "public_name": "EngineeringWorkspace.pkg",
-  "sha256": "1488acb460da6aab715d4f078dec3e808b54880cb8d84350747a6c1e369e0b4f"
+  "sha256": "207366f636224064bba2a83d033cfe07c7d8eeb1a230227c51109c8513a12dac"
  }
 }
